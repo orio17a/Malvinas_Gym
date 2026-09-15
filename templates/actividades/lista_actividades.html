@@ -1,0 +1,1285 @@
+{% extends "base_gestion.html" %}
+{% load static %}
+
+{% block title %}
+Actividades | Malvinas GYM
+{% endblock %}
+
+{% block breadcrumb %}
+Actividades
+{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+
+    <div class="page-title">
+        <h1>Actividades</h1>
+        <p>{{ total_actividades }} actividades registradas</p>
+    </div>
+
+    {% if perms.actividades.add_actividad %}
+        <a href="{% url 'actividades:actividad_crear' %}" class="btn btn-primary">
+            <i class="fa-solid fa-plus"></i>
+            Nueva actividad
+        </a>
+    {% endif %}
+
+</div>
+
+
+<!-- ========================================================= -->
+<!-- CONTADORES -->
+<!-- ========================================================= -->
+
+<div class="stats-grid">
+
+    <div class="stat-card">
+
+        <div class="stat-icon stat-icon-total">
+            <i class="fa-solid fa-dumbbell"></i>
+        </div>
+
+        <div class="stat-content">
+            <span class="stat-label">Actividades totales</span>
+            <strong class="stat-number">{{ actividades_totales }}</strong>
+        </div>
+
+    </div>
+
+
+    <div class="stat-card">
+
+        <div class="stat-icon stat-icon-active">
+            <i class="fa-solid fa-circle-play"></i>
+        </div>
+
+        <div class="stat-content">
+            <span class="stat-label">Actividades activas</span>
+            <strong class="stat-number">{{ actividades_activas }}</strong>
+        </div>
+
+    </div>
+
+
+    <div class="stat-card">
+
+        <div class="stat-icon stat-icon-inactive">
+            <i class="fa-solid fa-circle-pause"></i>
+        </div>
+
+        <div class="stat-content">
+            <span class="stat-label">Actividades inactivas</span>
+            <strong class="stat-number">{{ actividades_inactivas }}</strong>
+        </div>
+
+    </div>
+
+
+    <div class="stat-card">
+
+        <div class="stat-icon stat-icon-suspended">
+            <i class="fa-solid fa-ban"></i>
+        </div>
+
+        <div class="stat-content">
+            <span class="stat-label">Actividades Suspendidas</span>
+            <strong class="stat-number">{{ actividades_suspendidas }}</strong>
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- ========================================================= -->
+<!-- LISTADO -->
+<!-- ========================================================= -->
+
+<div class="gestion-card">
+
+    <div class="list-toolbar">
+
+        <form
+            method="GET"
+            action="{% url 'actividades:actividad_lista' %}"
+            class="search-form"
+            id="actividadesSearchForm"
+        >
+
+
+            <!-- ================================================= -->
+            <!-- ESTADO -->
+            <!-- ================================================= -->
+
+            <label
+                class="state-filter"
+                for="estadoActividad"
+            >
+
+                <select
+                    name="estado"
+                    id="estadoActividad"
+                >
+
+                    <option value="">
+                        Todos los estados
+                    </option>
+
+                    {% for est in estados_filtro %}
+
+                        <option
+                            value="{{ est.pk }}"
+                            {% if estado_id == est.pk|stringformat:'s' %}
+                                selected
+                            {% endif %}
+                        >
+                            {{ est.nombre }}
+                        </option>
+
+                    {% endfor %}
+
+                </select>
+
+            </label>
+
+
+            <!-- ================================================= -->
+            <!-- DÍA DE ACTIVIDAD -->
+            <!-- ================================================= -->
+
+            <div class="autocomplete-wrapper">
+
+                <div class="search-input-wrapper">
+
+                    <i class="fa-regular fa-calendar"></i>
+
+                    <input
+                        type="text"
+                        id="diaActividad"
+                        placeholder="Día de actividad..."
+                        autocomplete="off"
+                        value="{{ dia_actividad }}"
+                    >
+
+                    <!--
+                        Este hidden mantiene exactamente
+                        el parámetro que Django ya recibe.
+                    -->
+                    <input
+                        type="hidden"
+                        name="dia_actividad"
+                        id="diaActividadValor"
+                        value="{{ dia_actividad }}"
+                    >
+
+                </div>
+
+                <div
+                    id="sugerenciasDia"
+                    class="autocomplete-results"
+                ></div>
+
+            </div>
+
+
+            <!-- ================================================= -->
+            <!-- TIPO DE ACTIVIDAD -->
+            <!-- ================================================= -->
+
+            <div class="autocomplete-wrapper">
+
+                <div class="search-input-wrapper">
+
+                    <i class="fa-solid fa-dumbbell"></i>
+
+                    <input
+                        type="text"
+                        id="tipoActividad"
+                        placeholder="Tipo de actividad..."
+                        autocomplete="off"
+                        value="{{ tipo_actividad }}"
+                    >
+
+                    <!--
+                        Este hidden mantiene exactamente
+                        el parámetro que Django ya recibe.
+                    -->
+                    <input
+                        type="hidden"
+                        name="tipo_actividad"
+                        id="tipoActividadValor"
+                        value="{{ tipo_actividad }}"
+                    >
+
+                </div>
+
+                <div
+                    id="sugerenciasTipo"
+                    class="autocomplete-results"
+                ></div>
+
+            </div>
+
+
+
+            <!-- ================================================= -->
+            <!-- LIMPIAR -->
+            <!-- ================================================= -->
+
+            <button
+                type="button"
+                id="limpiarFiltrosActividades"
+                class="btn btn-sm btn-clear-filters
+                {% if buscar or estado_id or dia_actividad or tipo_actividad %}
+                    is-visible
+                {% endif %}"
+            >
+
+                <i class="fa-solid fa-xmark"></i>
+                Limpiar filtros
+
+            </button>
+
+        </form>
+
+    </div>
+
+
+    {% include "actividades/_resultados_actividades.html" %}
+
+</div>
+
+
+<!-- ========================================================= -->
+<!-- ESTILOS DEL AUTOCOMPLETADO -->
+<!-- ========================================================= -->
+
+<style>
+
+.autocomplete-wrapper {
+    position: relative;
+    min-width: 210px;
+}
+
+
+/* Caja de sugerencias */
+
+.autocomplete-results {
+    position: absolute;
+    top: calc(100% + 5px);
+    left: 0;
+    right: 0;
+
+    background: #ffffff;
+
+    border: 1px solid #dfe3e8;
+    border-radius: 8px;
+
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.10);
+
+    z-index: 1000;
+
+    display: none;
+
+    max-height: 240px;
+    overflow-y: auto;
+}
+
+
+/* Mostrar resultados */
+
+.autocomplete-results.is-visible {
+    display: block;
+}
+
+
+/* Cada sugerencia */
+
+.autocomplete-item {
+    padding: 11px 14px;
+
+    cursor: pointer;
+
+    font-size: 14px;
+
+    color: #1f2937;
+
+    border-bottom: 1px solid #f0f0f0;
+
+    transition: background 0.15s ease;
+}
+
+
+.autocomplete-item:last-child {
+    border-bottom: none;
+}
+
+
+.autocomplete-item:hover {
+    background: #f5f7fa;
+}
+
+
+/* Texto principal */
+
+.autocomplete-item strong {
+    display: block;
+
+    font-weight: 600;
+
+    color: #111827;
+}
+
+
+/* Texto auxiliar */
+
+.autocomplete-item span {
+    display: block;
+
+    margin-top: 2px;
+
+    font-size: 12px;
+
+    color: #6b7280;
+}
+
+
+/* Cuando no hay coincidencias */
+
+.autocomplete-empty {
+    padding: 12px 14px;
+
+    font-size: 13px;
+
+    color: #6b7280;
+}
+
+
+/* Ajuste para los buscadores */
+
+.autocomplete-wrapper .search-input-wrapper {
+    width: 100%;
+}
+
+
+/* Responsive */
+
+@media (max-width: 900px) {
+
+    .autocomplete-wrapper {
+        width: 100%;
+    }
+
+}
+
+</style>
+
+{{ dias_actividad|json_script:"dias-actividad-data" }}
+{{ tipos_actividad|json_script:"tipos-actividad-data" }}
+
+<!-- ========================================================= -->
+<!-- JAVASCRIPT -->
+<!-- ========================================================= -->
+
+<script src="{% static 'core/js/lista_actividades.js' %}"></script>
+
+{% comment %}<script>
+
+document.addEventListener("DOMContentLoaded", function () {
+
+    const formulario =
+        document.getElementById("actividadesSearchForm");
+
+    const filtroEstado =
+        document.getElementById("estadoActividad");
+
+    const filtroDia =
+        document.getElementById("diaActividad");
+
+    const valorDia =
+        document.getElementById("diaActividadValor");
+
+    const filtroTipo =
+        document.getElementById("tipoActividad");
+
+    const valorTipo =
+        document.getElementById("tipoActividadValor");
+
+    const botonLimpiar =
+        document.getElementById("limpiarFiltrosActividades");
+
+    const resultados =
+        document.getElementById("actividadesResults");
+
+    const sugerenciasDia =
+        document.getElementById("sugerenciasDia");
+
+    const sugerenciasTipo =
+        document.getElementById("sugerenciasTipo");
+
+
+    if (
+        !formulario ||
+        !filtroEstado ||
+        !filtroDia ||
+        !valorDia ||
+        !filtroTipo ||
+        !valorTipo ||
+        !botonLimpiar ||
+        !resultados
+    ) {
+        return;
+    }
+
+
+    let temporizador = null;
+
+    let solicitudActiva = null;
+
+
+    /* =========================================================
+    DATOS PARA AUTOCOMPLETADO
+    ========================================================= */
+
+    const diasActividad = JSON.parse(
+        document.getElementById("dias-actividad-data").textContent
+    );
+
+    const tiposActividad = JSON.parse(
+        document.getElementById("tipos-actividad-data").textContent
+    );
+
+
+    /*
+     * Las actividades se obtienen directamente
+     * de las filas que actualmente están mostradas.
+     *
+     * De esta manera no necesitamos crear una nueva
+     * vista ni modificar Django.
+     */
+
+    function obtenerNombresActividades() {
+
+        const nombres = [];
+
+        /*
+         * Buscamos enlaces dentro de la tabla.
+         *
+         * Si tu tabla tiene links hacia el detalle de la actividad,
+         * tomamos su texto como nombre.
+         */
+
+        resultados
+            .querySelectorAll("table tbody tr")
+            .forEach(function (fila) {
+
+                const enlaces =
+                    fila.querySelectorAll("a");
+
+                enlaces.forEach(function (enlace) {
+
+                    const texto =
+                        enlace.textContent.trim();
+
+                    if (
+                        texto &&
+                        !nombres.includes(texto)
+                    ) {
+                        nombres.push(texto);
+                    }
+
+                });
+
+            });
+
+
+        return nombres;
+    }
+
+
+    /* =========================================================
+    ACTUALIZAR RESULTADOS
+       ========================================================= */
+
+    async function actualizarResultados(url) {
+
+        if (solicitudActiva) {
+            solicitudActiva.abort();
+        }
+
+
+        const solicitud =
+            new AbortController();
+
+        solicitudActiva = solicitud;
+
+
+        try {
+
+            const respuesta =
+                await fetch(url, {
+
+                    headers: {
+                        "X-Requested-With":
+                            "XMLHttpRequest"
+                    },
+
+                    signal:
+                        solicitud.signal
+
+                });
+
+
+            if (!respuesta.ok) {
+
+                throw new Error(
+                    "No se pudo actualizar la lista de actividades."
+                );
+
+            }
+
+
+            const html =
+                await respuesta.text();
+
+
+            const documento =
+                new DOMParser()
+                    .parseFromString(
+                        html,
+                        "text/html"
+                    );
+
+
+            const nuevosResultados =
+                documento.getElementById(
+                    "actividadesResults"
+                );
+
+
+            if (!nuevosResultados) {
+
+                throw new Error(
+                    "La respuesta no contiene actividadesResults."
+                );
+
+            }
+
+
+            if (
+                solicitud.signal.aborted ||
+                solicitudActiva !== solicitud
+            ) {
+                return;
+            }
+
+
+            resultados.innerHTML =
+                nuevosResultados.innerHTML;
+
+
+            /*
+             * Actualizamos la URL sin recargar
+             * toda la página.
+             */
+
+            window.history.replaceState(
+                {},
+                "",
+                url
+            );
+
+
+            /*
+             * Después de actualizar los resultados,
+             * volvemos a tener disponibles los nombres
+             * de las actividades de la nueva tabla.
+             */
+
+        }
+
+        catch (error) {
+
+            if (
+                error.name !== "AbortError" &&
+                !solicitud.signal.aborted
+            ) {
+
+                console.error(error);
+
+            }
+
+        }
+
+    }
+
+
+    /* =========================================================
+    MOSTRAR / OCULTAR BOTÓN LIMPIAR
+       ========================================================= */
+
+    function actualizarBotonLimpiar() {
+
+        const hayFiltros =
+
+            filtroEstado.value !== "" ||
+            valorDia.value !== "" ||
+            valorTipo.value !== "";
+
+
+        botonLimpiar.classList.toggle(
+            "is-visible",
+            hayFiltros
+        );
+
+    }
+
+
+    /* =========================================================
+    ARMAR BÚSQUEDA
+       ========================================================= */
+
+    function buscarActividades() {
+
+        const parametros =
+            new URLSearchParams();
+
+
+        if (filtroEstado.value) {
+
+            parametros.set(
+                "estado",
+                filtroEstado.value
+            );
+
+        }
+
+
+        if (valorDia.value) {
+
+            parametros.set(
+                "dia_actividad",
+                valorDia.value
+            );
+
+        }
+
+
+        if (valorTipo.value) {
+
+            parametros.set(
+                "tipo_actividad",
+                valorTipo.value
+            );
+
+        }
+
+
+        actualizarBotonLimpiar();
+
+
+        const query =
+            parametros.toString();
+
+
+        const url =
+            formulario.action +
+            (query ? "?" + query : "");
+
+
+        actualizarResultados(url);
+
+    }
+
+
+    /* =========================================================
+    FUNCIÓN GENERAL PARA MOSTRAR SUGERENCIAS
+       ========================================================= */
+
+    function mostrarSugerencias(
+        input,
+        contenedor,
+        lista,
+        seleccionar
+    ) {
+
+        const texto =
+            input.value.trim().toLowerCase();
+
+
+        contenedor.innerHTML = "";
+
+
+        if (texto === "") {
+
+            contenedor.classList.remove("is-visible");
+            return;
+
+        }
+
+
+        const coincidencias =
+            lista
+                .filter(function (item) {
+
+                    return item
+                        .toLowerCase()
+                        .includes(texto);
+
+                })
+                .slice(0, 10);
+
+
+        /*
+         * No hay resultados.
+         */
+
+        if (coincidencias.length === 0) {
+
+            contenedor.innerHTML = `
+                <div class="autocomplete-empty">
+                    No se encontraron coincidencias
+                </div>
+            `;
+
+            contenedor.classList.add(
+                "is-visible"
+            );
+
+            return;
+        }
+
+
+        /*
+         * Crear opciones.
+         */
+
+        coincidencias.forEach(function (item) {
+
+            const opcion =
+                document.createElement("div");
+
+            opcion.className =
+                "autocomplete-item";
+
+
+            opcion.innerHTML = `
+                <strong>${escapeHtml(item)}</strong>
+            `;
+
+
+            opcion.addEventListener(
+                "mousedown",
+                function (event) {
+
+                    event.preventDefault();
+
+                    seleccionar(item);
+
+                }
+            );
+
+
+            contenedor.appendChild(opcion);
+
+        });
+
+
+        contenedor.classList.add(
+            "is-visible"
+        );
+
+    }
+
+
+    /* =========================================================
+    ESCAPAR HTML
+       ========================================================= */
+
+    function escapeHtml(texto) {
+
+        const div =
+            document.createElement("div");
+
+        div.textContent =
+            texto;
+
+        return div.innerHTML;
+
+    }
+
+
+    /* =========================================================
+    CERRAR SUGERENCIAS
+       ========================================================= */
+
+    function cerrarSugerencias() {
+
+        sugerenciasDia
+            .classList.remove("is-visible");
+
+        sugerenciasTipo
+            .classList.remove("is-visible");
+
+    }
+
+
+    /* =========================================================
+    AUTOCOMPLETADO — DÍA
+       ========================================================= */
+
+    filtroDia.addEventListener(
+        "input",
+        function () {
+
+            /*
+             * Cada vez que escribe,
+             * todavía no mandamos el filtro.
+             *
+             * Primero dejamos que seleccione.
+             */
+
+            valorDia.value = "";
+
+
+            mostrarSugerencias(
+                filtroDia,
+                sugerenciasDia,
+                diasActividad,
+                function (valor) {
+
+                    filtroDia.value =
+                        valor;
+
+                    valorDia.value =
+                        valor;
+
+                    sugerenciasDia
+                        .classList.remove(
+                            "is-visible"
+                        );
+
+                    buscarActividades();
+
+                }
+            );
+
+
+            actualizarBotonLimpiar();
+
+        }
+    );
+
+
+    /* =========================================================
+    ENTER — DÍA
+       ========================================================= */
+
+    filtroDia.addEventListener(
+        "keydown",
+        function (event) {
+
+            if (
+                event.key === "Enter" &&
+                !event.isComposing
+            ) {
+
+                event.preventDefault();
+
+                const texto =
+                    filtroDia.value.trim();
+
+
+                const coincidencia =
+                    diasActividad.find(
+                        function (dia) {
+
+                            return dia
+                                .toLowerCase() ===
+                                texto.toLowerCase();
+
+                        }
+                    );
+
+
+                if (coincidencia) {
+
+                    filtroDia.value =
+                        coincidencia;
+
+                    valorDia.value =
+                        coincidencia;
+
+                    cerrarSugerencias();
+
+                    buscarActividades();
+
+                }
+
+            }
+
+        }
+    );
+
+
+    /* =========================================================
+    AUTOCOMPLETADO — TIPO
+       ========================================================= */
+
+    filtroTipo.addEventListener(
+        "input",
+        function () {
+
+            valorTipo.value = "";
+
+
+            mostrarSugerencias(
+                filtroTipo,
+                sugerenciasTipo,
+                tiposActividad,
+                function (valor) {
+
+                    filtroTipo.value =
+                        valor;
+
+                    valorTipo.value =
+                        valor;
+
+                    sugerenciasTipo
+                        .classList.remove(
+                            "is-visible"
+                        );
+
+                    buscarActividades();
+
+                }
+            );
+
+
+            actualizarBotonLimpiar();
+
+        }
+    );
+
+
+    /* =========================================================
+    ENTER — TIPO
+       ========================================================= */
+
+    filtroTipo.addEventListener(
+        "keydown",
+        function (event) {
+
+            if (
+                event.key === "Enter" &&
+                !event.isComposing
+            ) {
+
+                event.preventDefault();
+
+                const texto =
+                    filtroTipo.value.trim();
+
+
+                const coincidencia =
+                    tiposActividad.find(
+                        function (tipo) {
+
+                            return tipo
+                                .toLowerCase() ===
+                                texto.toLowerCase();
+
+                        }
+                    );
+
+
+                if (coincidencia) {
+
+                    filtroTipo.value =
+                        coincidencia;
+
+                    valorTipo.value =
+                        coincidencia;
+
+                    cerrarSugerencias();
+
+                    buscarActividades();
+
+                }
+
+            }
+
+        }
+    );
+
+
+    /* =========================================================
+    ABRIR OPCIONES AL HACER CLICK
+       ========================================================= */
+
+    filtroDia.addEventListener(
+        "focus",
+        function () {
+
+            if (!filtroDia.value.trim()) {
+                cerrarSugerencias();
+                return;
+            }
+
+            mostrarSugerencias(
+                filtroDia,
+                sugerenciasDia,
+                diasActividad,
+                function (valor) {
+
+                    filtroDia.value =
+                        valor;
+
+                    valorDia.value =
+                        valor;
+
+                    cerrarSugerencias();
+
+                    buscarActividades();
+
+                }
+            );
+
+        }
+    );
+
+
+    filtroTipo.addEventListener(
+        "focus",
+        function () {
+
+            if (!filtroTipo.value.trim()) {
+                cerrarSugerencias();
+                return;
+            }
+
+            mostrarSugerencias(
+                filtroTipo,
+                sugerenciasTipo,
+                tiposActividad,
+                function (valor) {
+
+                    filtroTipo.value =
+                        valor;
+
+                    valorTipo.value =
+                        valor;
+
+                    cerrarSugerencias();
+
+                    buscarActividades();
+
+                }
+            );
+
+        }
+    );
+
+
+    /* =========================================================
+    ESTADO
+       ========================================================= */
+
+    filtroEstado.addEventListener(
+        "change",
+        function () {
+
+            clearTimeout(
+                temporizador
+            );
+
+            buscarActividades();
+
+        }
+    );
+
+
+    /* =========================================================
+    BOTÓN BUSCAR
+       ========================================================= */
+
+    formulario.addEventListener(
+        "submit",
+        function (event) {
+
+            event.preventDefault();
+
+            clearTimeout(
+                temporizador
+            );
+
+            cerrarSugerencias();
+
+            /*
+             * Si escribió exactamente un día,
+             * lo guardamos como valor real.
+             */
+
+            const diaEscrito =
+                filtroDia.value.trim();
+
+
+            const diaCoincidencia =
+                diasActividad.find(
+                    function (dia) {
+
+                        return dia
+                            .toLowerCase() ===
+                            diaEscrito.toLowerCase();
+
+                    }
+                );
+
+
+            if (diaCoincidencia) {
+
+                valorDia.value =
+                    diaCoincidencia;
+
+            }
+
+
+            /*
+             * Si escribió exactamente un tipo,
+             * lo guardamos como valor real.
+             */
+
+            const tipoEscrito =
+                filtroTipo.value.trim();
+
+
+            const tipoCoincidencia =
+                tiposActividad.find(
+                    function (tipo) {
+
+                        return tipo
+                            .toLowerCase() ===
+                            tipoEscrito.toLowerCase();
+
+                    }
+                );
+
+
+            if (tipoCoincidencia) {
+
+                valorTipo.value =
+                    tipoCoincidencia;
+
+            }
+
+
+            buscarActividades();
+
+        }
+    );
+
+
+    /* =========================================================
+    LIMPIAR FILTROS
+       ========================================================= */
+
+    botonLimpiar.addEventListener(
+        "click",
+        function () {
+
+            clearTimeout(
+                temporizador
+            );
+
+            filtroEstado.value = "";
+            filtroDia.value = "";
+            valorDia.value = "";
+            filtroTipo.value = "";
+            valorTipo.value = "";
+
+            cerrarSugerencias();
+            actualizarBotonLimpiar();
+
+            window.location.href = formulario.action;
+
+        }
+    );
+
+
+    /* =========================================================
+    CERRAR AL HACER CLICK AFUERA
+       ========================================================= */
+
+    document.addEventListener(
+        "click",
+        function (event) {
+
+            if (
+                !event.target.closest(
+                    ".autocomplete-wrapper"
+                )
+            ) {
+
+                cerrarSugerencias();
+
+            }
+
+        }
+    );
+
+
+    /* =========================================================
+    PAGINACIÓN AJAX
+       ========================================================= */
+
+    resultados.addEventListener(
+        "click",
+        function (event) {
+
+            const enlace =
+                event.target.closest(
+                    ".pagination a"
+                );
+
+
+            if (
+                !enlace ||
+                event.ctrlKey ||
+                event.metaKey ||
+                event.shiftKey ||
+                event.altKey
+            ) {
+
+                return;
+
+            }
+
+
+            event.preventDefault();
+
+
+            clearTimeout(
+                temporizador
+            );
+
+
+            actualizarResultados(
+                enlace.href
+            );
+
+        }
+    );
+
+
+    /* =========================================================
+    ESTADO INICIAL
+       ========================================================= */
+
+    actualizarBotonLimpiar();
+
+});
+
+</script>{% endcomment %}
+
+{% endblock %}

@@ -1,0 +1,188 @@
+{% extends "base_gestion.html" %}
+
+{% block title %}
+Detalle de Actividad | Malvinas GYM
+{% endblock %}
+
+{% block breadcrumb %}Actividades{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+    <div class="page-title">
+        <h1>Detalle de la Actividad</h1>
+        <p>Información registrada en el sistema</p>
+    </div>
+
+    <a href="{% url 'actividades:actividad_lista' %}" class="btn btn-outline btn-sm">
+        <i class="fa-solid fa-arrow-left"></i>
+        Volver al listado
+    </a>
+</div>
+
+
+<!-- Envoltorio general centrado -->
+<div class="form-blocks-container">
+
+    <!-- BLOQUE 1 -->
+    <div class="form-card-block">
+
+        <div class="form-step-title">
+            <span>Paso 1</span>
+            <h3>
+                <i class="fa-solid fa-dumbbell me-2"></i>
+                Información de la Actividad
+            </h3>
+        </div>
+
+        <div class="field-group">
+            <label>Nombre</label>
+            <div class="detail-value">
+                {{ actividad.nombre }}
+            </div>
+        </div>
+
+        <div class="field-group">
+            <label>Descripción</label>
+            <div class="detail-value">
+                {{ actividad.descripcion|default:"-" }}
+            </div>
+        </div>
+
+        <div class="field-group">
+            <label>Fecha de creación</label>
+            <div class="detail-value">
+                {{ actividad.fecha_creacion|date:"d/m/Y H:i" }}
+            </div>
+        </div>
+
+    </div>
+
+
+    <!-- BLOQUE 2 -->
+    <div class="form-card-block">
+
+        <div class="form-step-title">
+            <span>Paso 2</span>
+            <h3>
+                <i class="fa-solid fa-calendar-days me-2"></i>
+                Horarios de la Actividad
+            </h3>
+        </div>
+
+        {% if horarios %}
+
+            <div class="table-responsive">
+                <table class="gestion-table">
+
+                    <thead>
+                        <tr>
+                            <th>Día</th>
+                            <th>Horario</th>
+                            <th>Profesor</th>
+                            <th>Cupo</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+
+                        {% for horario in horarios %}
+
+                            <tr>
+
+                                <td>
+                                    {{ horario.dia }}
+                                </td>
+
+                                <td>
+                                    {{ horario.hora_inicio|time:"H:i" }}
+                                    a
+                                    {{ horario.hora_fin|time:"H:i" }}
+                                </td>
+
+                                <td>
+                                    {{ horario.profesor }}
+                                </td>
+
+                                <td>
+                                    {{ horario.cupo }}
+                                </td>
+
+                            </tr>
+
+                        {% endfor %}
+
+                    </tbody>
+
+                </table>
+            </div>
+
+        {% else %}
+
+            <div class="detail-value">
+                Esta actividad todavía no tiene horarios asignados.
+            </div>
+
+        {% endif %}
+
+    </div>
+
+
+    <!-- BLOQUE 3 -->
+    <div class="form-card-block">
+
+        <div class="form-step-title">
+            <span>Paso 3</span>
+            <h3>
+                <i class="fa-solid fa-sliders me-2"></i>
+                Estado de la Actividad
+            </h3>
+        </div>
+
+        <div class="field-group">
+
+            <label>Estado</label>
+
+            <div class="detail-value">
+
+                {% if actividad.estado_actividad.nombre|lower == 'activo' %}
+
+                    <span class="badge bg-success">
+                        {{ actividad.estado_actividad.nombre }}
+                    </span>
+
+                {% else %}
+
+                    <span class="badge bg-danger">
+                        {{ actividad.estado_actividad.nombre }}
+                    </span>
+
+                {% endif %}
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- ACCIONES -->
+    <div class="form-footer-actions">
+
+        {% if perms.actividades.change_actividad %}
+
+            <a href="{% url 'actividades:actividad_editar' actividad.pk %}"
+                class="btn btn-primary btn-sm">
+
+                <i class="fa-solid fa-pen-to-square me-1"></i>
+                Editar Actividad
+
+            </a>
+
+        {% endif %}
+
+    </div>
+
+</div>
+
+{% endblock %}

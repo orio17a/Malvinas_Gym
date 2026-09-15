@@ -1,0 +1,185 @@
+{% extends 'base_gestion.html' %}
+
+{% block title %}
+Detalle del Horario | Malvinas GYM
+{% endblock %}
+
+{% block breadcrumb %}Horarios{% endblock %}
+
+{% block content %}
+
+<div class="page-header"> <div class="page-title"> <h1>Detalle del Horario</h1> <p>Información registrada en el sistema</p> </div>
+
+<div style="display: flex; align-items: center; gap: 8px;">
+
+    {% if perms.actividades.add_asistencia %}
+        <a href="{% url 'actividades:tomar_asistencia' horario.pk %}" class="btn btn-primary btn-sm">
+            <i class="fa-solid fa-clipboard-check me-1"></i>
+            Tomar asistencia
+        </a>
+    {% endif %}
+
+    {% if perms.actividades.change_horario %}
+        <a href="{% url 'actividades:horario_editar' horario.pk %}" class="btn btn-outline btn-sm">
+            <i class="fa-solid fa-pen-to-square me-1"></i>
+            Editar horario
+        </a>
+    {% endif %}
+
+    <a href="{% url 'actividades:horario_lista' %}" class="btn btn-outline btn-sm">
+        <i class="fa-solid fa-arrow-left"></i>
+        Volver al listado
+    </a>
+
+</div>
+
+
+</div>
+
+<!-- Envoltorio general centrado -->
+
+<div class="form-blocks-container">
+
+    <!-- BLOQUE 1 -->
+    <div class="form-card-block">
+
+        <div class="form-step-title">
+            <span>Paso 1</span>
+            <h3>
+                <i class="fa-solid fa-calendar-days me-2"></i>
+                Información del Horario
+            </h3>
+        </div>
+
+        <div class="field-group">
+            <label>Actividad</label>
+            <div class="detail-value">
+                {{ horario.actividad }}
+            </div>
+        </div>
+
+        <div class="field-group">
+            <label>Día</label>
+            <div class="detail-value">
+                {{ horario.dia }}
+            </div>
+        </div>
+
+        <div class="field-group">
+            <label>Hora de inicio</label>
+            <div class="detail-value">
+                {{ horario.hora_inicio|time:"H:i" }}
+            </div>
+        </div>
+
+        <div class="field-group">
+            <label>Hora de finalización</label>
+            <div class="detail-value">
+                {{ horario.hora_fin|time:"H:i" }}
+            </div>
+        </div>
+
+        <div class="field-group">
+            <label>Cupo</label>
+            <div class="detail-value">
+                {{ horario.cupo }}
+            </div>
+        </div>
+
+    </div>
+
+
+    <!-- BLOQUE 2 -->
+    <div class="form-card-block">
+
+        <div class="form-step-title">
+            <span>Paso 2</span>
+            <h3>
+                <i class="fa-solid fa-user-tie me-2"></i>
+                Profesor Asignado
+            </h3>
+        </div>
+
+        <div class="field-group">
+            <label>Profesor</label>
+            <div class="detail-value">
+                {{ horario.profesor }}
+            </div>
+        </div>
+
+    </div>
+
+
+<!-- BLOQUE 3 -->
+    <div class="form-card-block">
+
+        <div class="form-step-title">
+            <span>Paso 3</span>
+            <h3>
+                <i class="fa-solid fa-users me-2"></i>
+                Socios Inscriptos
+            </h3>
+        </div>
+
+        <div class="field-group">
+            <label>Cantidad de inscriptos</label>
+            <div class="detail-value">
+                {{ inscriptos|length }} / {{ horario.cupo }}
+            </div>
+        </div>
+
+        {% if inscriptos %}
+
+            <div class="field-group">
+                <label>Listado de socios</label>
+
+                <div class="detail-value">
+
+                    <table class="gestion-table">
+                        <thead>
+                            <tr>
+                                <th>Socio</th>
+                                <th>DNI</th>
+                                <th>Fecha de inscripción</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            {% for inscripcion in inscriptos %}
+                                <tr>
+                                    <td>
+                                        {{ inscripcion.socio }}
+                                    </td>
+
+                                    <td>
+                                        {{ inscripcion.socio.dni }}
+                                    </td>
+
+                                    <td>
+                                        {{ inscripcion.fecha_inscripcion|date:"d/m/Y" }}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+
+                </div>
+            </div>
+
+        {% else %}
+
+            <div class="field-group">
+                <label>Listado de socios</label>
+
+                <div class="detail-value">
+                    Todavía no hay socios inscriptos en este horario.
+                </div>
+            </div>
+
+        {% endif %}
+
+    </div>
+
+</div>
+
+{% endblock %}

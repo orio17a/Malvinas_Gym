@@ -1,0 +1,119 @@
+{% extends 'base_gestion.html' %}
+
+{% block title %}
+Detalle del Profesor | Malvinas GYM
+{% endblock %}
+{% block breadcrumb %}Profesores{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+    <div class="page-title">
+        <h1>Detalle del Profesor</h1>
+        <p>Información registrada en el sistema</p>
+    </div>
+
+    <a href="{% url 'actividades:profesor_list' %}" class="btn btn-outline btn-sm">
+        <i class="fa-solid fa-arrow-left"></i>
+        Volver al listado
+    </a>
+</div>
+
+<!-- Envoltorio general centrado -->
+<div class="form-blocks-container">
+
+    <!-- BLOQUE 1 -->
+    <div class="form-card-block">
+        <div class="form-step-title">
+            <span>Paso 1</span>
+            <h3><i class="fa-solid fa-user me-2"></i>Información Personal</h3>
+        </div>
+
+        <div class="field-group">
+            <label>Nombre</label>
+            <div class="detail-value">{{ profesor.nombre }}</div>
+        </div>
+
+        <div class="field-group">
+            <label>Apellido</label>
+            <div class="detail-value">{{ profesor.apellido }}</div>
+        </div>
+
+        <div class="field-group">
+            <label>DNI</label>
+            <div class="detail-value">{{ profesor.dni }}</div>
+        </div>
+
+        <div class="field-group">
+            <label>Fecha de nacimiento</label>
+            <div class="detail-value">{{ profesor.fecha_nacimiento }}</div>
+        </div>
+
+        <div class="field-group">
+            <label>Fecha de ingreso</label>
+            <div class="detail-value">{{ profesor.fecha_ingreso }}</div>
+        </div>
+    </div>
+
+    <!-- BLOQUE 2 -->
+    <div class="form-card-block">
+        <div class="form-step-title">
+            <span>Paso 2</span>
+            <h3><i class="fa-solid fa-address-book me-2"></i>Contacto y Domicilio</h3>
+        </div>
+
+        <div class="field-group">
+            <label>Teléfono Principal</label>
+            <div class="detail-value">{{ profesor.telefono }}</div>
+        </div>
+
+        <div class="field-group">
+            <label>Teléfono Secundario</label>
+            <div class="detail-value">{{ profesor.telefono_2|default:"-" }}</div>
+        </div>
+
+        <div class="field-group">
+            <label>Email</label>
+            <div class="detail-value">{{ profesor.email|default:"-" }}</div>
+        </div>
+
+        <div class="field-group">
+            <label>Domicilio</label>
+            <div class="detail-value">{{ profesor.domicilio|default:"-" }}</div>
+        </div>
+    </div>
+
+    <!-- BLOQUE 3 -->
+    <div class="form-card-block">
+        <div class="form-step-title">
+            <span>Paso 3</span>
+            <h3><i class="fa-solid fa-sliders me-2"></i>Asignación de Estado y Usuario</h3>
+        </div>
+
+        <div class="field-group">
+            <label>Estado del Profesor</label>
+            <div class="detail-value">
+                {% if profesor.estado_profesor.nombre|lower == 'activo' %}
+                    <span class="badge bg-success">{{ profesor.estado_profesor.nombre }}</span>
+                {% else %}
+                    <span class="badge bg-danger">{{ profesor.estado_profesor.nombre }}</span>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="field-group">
+            <label>Usuario del Sistema</label>
+            <div class="detail-value">{{ profesor.usuario|default:"Sin usuario asignado" }}</div>
+        </div>
+    </div>
+
+    <!-- ACCIONES -->
+    <div class="form-footer-actions">
+        <a href="{% url 'actividades:profesor_update' profesor.pk %}" class="btn btn-primary btn-sm">
+            <i class="fa-solid fa-pen-to-square me-1"></i> Editar Profesor
+        </a>
+    </div>
+
+</div>
+
+{% endblock %}

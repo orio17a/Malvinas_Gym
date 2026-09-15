@@ -1,0 +1,1545 @@
+{% extends "base_gestion.html" %}
+
+
+{% block title %}
+    {{ socio.nombre }} {{ socio.apellido }} | Malvinas GYM
+{% endblock %}
+
+{% block breadcrumb %}Socios{% endblock %}
+
+
+{% block content %}
+
+<div class="socio-profile">
+
+
+    <!-- =====================================================
+        ENCABEZADO DEL SOCIO
+        ===================================================== -->
+
+    <header class="profile-header gestion-card">
+
+        <div class="profile-identity">
+
+            <!-- Volver -->
+            <a
+                href="{% url 'socios:lista' %}"
+                class="profile-back"
+                aria-label="Volver a socios"
+                title="Volver a socios"
+            >
+                <i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
+            </a>
+
+
+            <!-- Avatar genérico -->
+            <div class="detail-avatar" aria-hidden="true">
+                <i class="fa-solid fa-user"></i>
+            </div>
+
+
+            <!-- Nombre / edad / estado -->
+            <div class="profile-name">
+
+                <span class="detail-eyebrow">
+                    Ficha de socio
+                </span>
+
+                <h1>
+                    {{ socio.nombre }} {{ socio.apellido }}
+                </h1>
+
+
+                <div class="profile-meta">
+
+                    <!-- Edad -->
+                    <span>
+                        {% if socio.edad is not None %}
+                            {{ socio.edad }} años
+                        {% else %}
+                            Edad no informada
+                        {% endif %}
+                    </span>
+
+
+                    <!-- Estado del socio -->
+                    <span
+                        class="
+                            status-badge
+
+                            {% if socio.estado_socio.nombre|lower == 'activo' %}
+                                status-active
+
+                            {% elif socio.estado_socio.nombre|lower == 'pendiente' %}
+                                status-warning
+
+                            {% elif socio.estado_socio.nombre|lower == 'suspendido' %}
+                                status-suspended
+
+                            {% else %}
+                                status-inactive
+                            {% endif %}
+                        "
+                    >
+                        <i
+                            class="fa-solid fa-circle"
+                            aria-hidden="true"
+                        ></i>
+
+                        {{ socio.estado_socio.nombre|default:"Sin información" }}
+                    </span>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- =================================================
+             ACCIONES DEL SOCIO
+             ================================================= -->
+
+        <div class="detail-actions socio-header-actions">
+
+            <!-- Editar -->
+            <a
+                href="{% url 'socios:editar' socio.pk %}?next=detalle"
+                class="btn btn-primary"
+            >
+                <i class="fa-solid fa-pen" aria-hidden="true"></i>
+                Editar socio
+            </a>
+
+
+            {% if perms.socios.change_socio %}
+
+
+                <!-- =========================================
+                     PENDIENTE
+                     ========================================= -->
+
+                {% if socio.estado_socio.nombre|lower == "pendiente" %}
+
+                    <button
+                        type="button"
+                        class="btn btn-success"
+                        id="openActivarModal"
+                    >
+                        <i class="fa-solid fa-check" aria-hidden="true"></i>
+                        Activar
+                    </button>
+
+
+                <!-- =========================================
+                     ACTIVO
+                     ========================================= -->
+
+                {% elif socio.estado_socio.nombre|lower == "activo" %}
+
+                    <button
+                        type="button"
+                        class="btn btn-danger"
+                        id="openDarBajaModal"
+                    >
+                        <i
+                            class="fa-solid fa-user-slash"
+                            aria-hidden="true"
+                        ></i>
+
+                        Dar de baja
+                    </button>
+
+
+                <!-- =========================================
+                     SUSPENDIDO
+                     ========================================= -->
+
+                {% elif socio.estado_socio.nombre|lower == "suspendido" %}
+
+                    <button
+                        type="button"
+                        class="btn btn-success"
+                        id="openReanudarModal"
+                    >
+                        <i class="fa-solid fa-play" aria-hidden="true"></i>
+                        Reanudar
+                    </button>
+
+                    <button
+                        type="button"
+                        class="btn btn-danger"
+                        id="openDarBajaModal"
+                    >
+                        <i
+                            class="fa-solid fa-user-slash"
+                            aria-hidden="true"
+                        ></i>
+
+                        Dar de baja
+                    </button>
+
+
+                <!-- =========================================
+                     INACTIVO
+                     ========================================= -->
+
+                {% elif socio.estado_socio.nombre|lower == "inactivo" %}
+
+                    <button
+                        type="button"
+                        class="btn btn-success"
+                        id="openReactivarModal"
+                    >
+                        <i
+                            class="fa-solid fa-rotate-left"
+                            aria-hidden="true"
+                        ></i>
+
+                        Reactivar
+                    </button>
+
+                {% endif %}
+
+            {% endif %}
+
+
+            <!-- Eliminar definitivamente: solo Inactivo -->
+            {% if perms.socios.delete_socio and socio.estado_socio.nombre|lower == "inactivo" %}
+
+                <button
+                    type="button"
+                    class="btn btn-danger btn-sm"
+                    id="openEliminarModal"
+                >
+                    <i class="fa-solid fa-trash" aria-hidden="true"></i>
+                    Eliminar definitivamente
+                </button>
+
+            {% endif %}
+
+        </div>
+
+    </header>
+
+
+
+    <!-- =====================================================
+         MODALES DE ESTADO
+         ===================================================== -->
+
+
+    <!-- =====================================================
+         MODAL ACTIVAR
+         Pendiente -> Activo
+         ===================================================== -->
+
+    {% if perms.socios.change_socio and socio.estado_socio.nombre|lower == "pendiente" %}
+
+        <dialog
+            class="gestion-modal"
+            id="activarSocioModal"
+            aria-labelledby="activarSocioTitle"
+        >
+
+            <form
+                method="post"
+                action="{% url 'socios:activar' socio.pk %}"
+            >
+                {% csrf_token %}
+
+
+                <div class="gestion-modal-icon" aria-hidden="true">
+                    <i class="fa-solid fa-check"></i>
+                </div>
+
+
+                <div class="gestion-modal-content">
+
+                    <h2 id="activarSocioTitle">
+                        ¿Activar a {{ socio.nombre }} {{ socio.apellido }}?
+                    </h2>
+
+                    <p>
+                        El socio pasará a estar activo en el sistema.
+                    </p>
+
+                </div>
+
+
+                <div class="gestion-modal-actions">
+
+                    <button
+                        type="button"
+                        class="btn btn-outline"
+                        id="cancelActivarSocio"
+                    >
+                        Cancelar
+                    </button>
+
+                    <button
+                        type="submit"
+                        class="btn btn-success"
+                    >
+                        <i class="fa-solid fa-check" aria-hidden="true"></i>
+                        Activar
+                    </button>
+
+                </div>
+
+            </form>
+
+        </dialog>
+
+    {% endif %}
+
+
+
+    <!-- =====================================================
+         MODAL SUSPENDER
+         Activo -> Suspendido
+         ===================================================== -->
+
+    {% if perms.socios.change_socio and socio.estado_socio.nombre|lower == "activo" %}
+
+        <dialog
+            class="gestion-modal"
+            id="suspenderSocioModal"
+            aria-labelledby="suspenderSocioTitle"
+        >
+
+            <form
+                method="post"
+                action="{% url 'socios:suspender' socio.pk %}"
+            >
+                {% csrf_token %}
+
+
+                <div class="gestion-modal-icon" aria-hidden="true">
+                    <i class="fa-solid fa-pause"></i>
+                </div>
+
+
+                <div class="gestion-modal-content">
+
+                    <h2 id="suspenderSocioTitle">
+                        ¿Suspender a {{ socio.nombre }} {{ socio.apellido }}?
+                    </h2>
+
+                    <p>
+                        El socio quedará suspendido temporalmente.
+                        Podrá ser reanudado posteriormente.
+                    </p>
+
+                </div>
+
+
+                <div class="gestion-modal-actions">
+
+                    <button
+                        type="button"
+                        class="btn btn-outline"
+                        id="cancelSuspenderSocio"
+                    >
+                        Cancelar
+                    </button>
+
+                    <button
+                        type="submit"
+                        class="btn btn-warning"
+                    >
+                        <i class="fa-solid fa-pause" aria-hidden="true"></i>
+                        Suspender
+                    </button>
+
+                </div>
+
+            </form>
+
+        </dialog>
+
+    {% endif %}
+
+
+
+    <!-- =====================================================
+         MODAL REANUDAR
+         Suspendido -> Activo
+         ===================================================== -->
+
+    {% if perms.socios.change_socio and socio.estado_socio.nombre|lower == "suspendido" %}
+
+        <dialog
+            class="gestion-modal"
+            id="reanudarSocioModal"
+            aria-labelledby="reanudarSocioTitle"
+        >
+
+            <form
+                method="post"
+                action="{% url 'socios:reanudar' socio.pk %}"
+            >
+                {% csrf_token %}
+
+
+                <div class="gestion-modal-icon" aria-hidden="true">
+                    <i class="fa-solid fa-play"></i>
+                </div>
+
+
+                <div class="gestion-modal-content">
+
+                    <h2 id="reanudarSocioTitle">
+                        ¿Reanudar a {{ socio.nombre }} {{ socio.apellido }}?
+                    </h2>
+
+                    <p>
+                        El socio volverá a estar activo en el sistema.
+                    </p>
+
+                </div>
+
+
+                <div class="gestion-modal-actions">
+
+                    <button
+                        type="button"
+                        class="btn btn-outline"
+                        id="cancelReanudarSocio"
+                    >
+                        Cancelar
+                    </button>
+
+                    <button
+                        type="submit"
+                        class="btn btn-success"
+                    >
+                        <i class="fa-solid fa-play" aria-hidden="true"></i>
+                        Reanudar
+                    </button>
+
+                </div>
+
+            </form>
+
+        </dialog>
+
+    {% endif %}
+
+
+
+    <!-- =====================================================
+         MODAL REACTIVAR
+         Inactivo -> Activo
+         ===================================================== -->
+
+    {% if perms.socios.change_socio and socio.estado_socio.nombre|lower == "inactivo" %}
+
+        <dialog
+            class="gestion-modal"
+            id="reactivarSocioModal"
+            aria-labelledby="reactivarSocioTitle"
+            aria-describedby="reactivarSocioDescription"
+        >
+
+            <form
+                method="post"
+                action="{% url 'socios:reactivar' socio.pk %}"
+            >
+                {% csrf_token %}
+
+
+                <div class="gestion-modal-icon" aria-hidden="true">
+                    <i class="fa-solid fa-rotate-left"></i>
+                </div>
+
+
+                <div class="gestion-modal-content">
+
+                    <h2 id="reactivarSocioTitle">
+                        ¿Reactivar a {{ socio.nombre }} {{ socio.apellido }}?
+                    </h2>
+
+                    <p id="reactivarSocioDescription">
+                        El socio volverá a estar activo en el sistema.
+                    </p>
+
+                </div>
+
+
+                <div class="gestion-modal-actions">
+
+                    <button
+                        type="button"
+                        class="btn btn-outline"
+                        id="cancelReactivarSocio"
+                    >
+                        Cancelar
+                    </button>
+
+                    <button
+                        type="submit"
+                        class="btn btn-success"
+                    >
+                        <i
+                            class="fa-solid fa-rotate-left"
+                            aria-hidden="true"
+                        ></i>
+
+                        Reactivar
+                    </button>
+
+                </div>
+
+            </form>
+
+        </dialog>
+
+    {% endif %}
+
+
+
+    <!-- =====================================================
+         MODAL DAR DE BAJA
+         Activo / Suspendido -> Inactivo
+         ===================================================== -->
+
+    {% if perms.socios.change_socio %}
+
+        {% if socio.estado_socio.nombre|lower == "activo" or socio.estado_socio.nombre|lower == "suspendido" %}
+
+            <dialog
+                class="gestion-modal"
+                id="darBajaModal"
+                aria-labelledby="darBajaTitle"
+            >
+
+                <form
+                    method="post"
+                    action="{% url 'socios:dar_baja' socio.pk %}"
+                >
+                    {% csrf_token %}
+
+
+                    <div class="gestion-modal-icon" aria-hidden="true">
+                        <i class="fa-solid fa-triangle-exclamation"></i>
+                    </div>
+
+
+                    <div class="gestion-modal-content">
+
+                        <h2 id="darBajaTitle">
+                            ¿Dar de baja a {{ socio.nombre }} {{ socio.apellido }}?
+                        </h2>
+
+                        <p>
+                            El socio quedará inactivo y su información
+                            e historial se conservarán.
+                        </p>
+
+                    </div>
+
+
+                    <div class="gestion-modal-actions">
+
+                        <button
+                            type="button"
+                            class="btn btn-outline"
+                            id="cancelDarBaja"
+                        >
+                            Cancelar
+                        </button>
+
+                        <button
+                            type="submit"
+                            class="btn btn-danger"
+                        >
+                            <i
+                                class="fa-solid fa-user-slash"
+                                aria-hidden="true"
+                            ></i>
+
+                            Confirmar baja
+                        </button>
+
+                    </div>
+
+                </form>
+
+            </dialog>
+
+        {% endif %}
+
+    {% endif %}
+
+
+
+    <!-- =====================================================
+         MODAL ELIMINAR DEFINITIVAMENTE
+         Solo Inactivo
+         ===================================================== -->
+
+    {% if perms.socios.delete_socio and socio.estado_socio.nombre|lower == "inactivo" %}
+
+        <dialog
+            class="gestion-modal"
+            id="eliminarSocioModal"
+            aria-labelledby="eliminarSocioTitle"
+            aria-describedby="eliminarSocioDescription"
+        >
+
+            <form
+                method="post"
+                action="{% url 'socios:eliminar' socio.pk %}"
+            >
+                {% csrf_token %}
+
+
+                <div class="gestion-modal-icon" aria-hidden="true">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                </div>
+
+
+                <div class="gestion-modal-content">
+
+                    <h2 id="eliminarSocioTitle">
+                        ¿Eliminar definitivamente a
+                        {{ socio.nombre }} {{ socio.apellido }}?
+                    </h2>
+
+                    <p id="eliminarSocioDescription">
+                        Esta acción eliminará al socio del sistema
+                        y no se puede deshacer.
+                    </p>
+
+                </div>
+
+
+                <div class="gestion-modal-actions">
+
+                    <button
+                        type="button"
+                        class="btn btn-outline"
+                        id="cancelEliminarSocio"
+                    >
+                        Cancelar
+                    </button>
+
+                    <button
+                        type="submit"
+                        class="btn btn-danger"
+                    >
+                        <i class="fa-solid fa-trash" aria-hidden="true"></i>
+                        Eliminar definitivamente
+                    </button>
+
+                </div>
+
+            </form>
+
+        </dialog>
+
+    {% endif %}
+
+
+
+    <!-- =====================================================
+         PESTAÑAS
+         ===================================================== -->
+
+    <div
+        class="profile-tabs"
+        role="tablist"
+        aria-label="Secciones del socio"
+    >
+
+        <button
+            type="button"
+            class="profile-tab"
+            role="tab"
+            id="tab-informacion"
+            aria-controls="panel-informacion"
+            aria-selected="true"
+            tabindex="0"
+        >
+            <i class="fa-solid fa-circle-info" aria-hidden="true"></i>
+            Información
+        </button>
+
+
+        <button
+            type="button"
+            class="profile-tab"
+            role="tab"
+            id="tab-membresia"
+            aria-controls="panel-membresia"
+            aria-selected="false"
+            tabindex="-1"
+        >
+            <i class="fa-solid fa-id-card" aria-hidden="true"></i>
+            Membresía
+        </button>
+
+
+        <button
+            type="button"
+            class="profile-tab"
+            role="tab"
+            id="tab-cuotas"
+            aria-controls="panel-cuotas"
+            aria-selected="false"
+            tabindex="-1"
+        >
+            <i
+                class="fa-solid fa-file-invoice-dollar"
+                aria-hidden="true"
+            ></i>
+
+            Cuotas
+        </button>
+
+
+        <button
+            type="button"
+            class="profile-tab"
+            role="tab"
+            id="tab-actividades"
+            aria-controls="panel-actividades"
+            aria-selected="false"
+            tabindex="-1"
+        >
+            <i class="fa-solid fa-dumbbell" aria-hidden="true"></i>
+            Actividades
+        </button>
+
+
+        <button
+            type="button"
+            class="profile-tab"
+            role="tab"
+            id="tab-asistencias"
+            aria-controls="panel-asistencias"
+            aria-selected="false"
+            tabindex="-1"
+        >
+            <i
+                class="fa-solid fa-calendar-check"
+                aria-hidden="true"
+            ></i>
+
+            Asistencias
+        </button>
+
+
+        <button
+            type="button"
+            class="profile-tab"
+            role="tab"
+            id="tab-documentos"
+            aria-controls="panel-documentos"
+            aria-selected="false"
+            tabindex="-1"
+        >
+            <i class="fa-solid fa-folder-open" aria-hidden="true"></i>
+            Documentos
+        </button>
+
+    </div>
+
+
+
+    <!-- =====================================================
+         PESTAÑA: INFORMACIÓN
+         ===================================================== -->
+
+    <div
+        id="panel-informacion"
+        role="tabpanel"
+        aria-labelledby="tab-informacion"
+        tabindex="0"
+    >
+
+        <div class="detail-grid">
+
+
+
+            <!-- =============================================
+                 INFORMACIÓN PERSONAL
+                 ============================================= -->
+
+            <section class="detail-card profile-personal">
+
+                <div class="detail-card-header">
+
+                    <span class="detail-card-icon" aria-hidden="true">
+                        <i class="fa-solid fa-address-card"></i>
+                    </span>
+
+                    <h2>Información personal</h2>
+
+                </div>
+
+
+                <dl class="detail-data-grid">
+
+
+                    <!-- Email -->
+                    <div class="detail-data-item">
+                        <dt>Email</dt>
+
+                        <dd>
+                            {{ socio.email|default:"-" }}
+                        </dd>
+                    </div>
+
+
+                    <!-- Teléfono -->
+                    <div class="detail-data-item">
+                        <dt>Teléfono</dt>
+
+                        <dd>
+                            {{ telefono_formateado|default:"-" }}
+                        </dd>
+                    </div>
+
+
+                    <!-- Fecha de nacimiento -->
+                    <div class="detail-data-item">
+
+                        <dt>Fecha de nacimiento</dt>
+
+                        <dd>
+                            {{ socio.fecha_nacimiento|date:"d/m/Y"|default:"-" }}
+
+                            {% if socio.edad is not None %}
+                                ({{ socio.edad }} años)
+                            {% endif %}
+                        </dd>
+
+                    </div>
+
+
+                    <!-- DNI -->
+                    <div class="detail-data-item">
+
+                        <dt>DNI</dt>
+
+                        <dd>
+                            {{ socio.dni|default:"-" }}
+                        </dd>
+
+                    </div>
+
+
+                    <!-- Domicilio -->
+                    <div class="detail-data-item">
+
+                        <dt>Domicilio</dt>
+
+                        <dd>
+                            {{ socio.domicilio|default:"-" }}
+                        </dd>
+
+                    </div>
+
+
+                    <!-- Fecha de ingreso -->
+                    <div class="detail-data-item">
+
+                        <dt>Fecha de ingreso</dt>
+
+                        <dd>
+                            {{ socio.fecha_ingreso|date:"d/m/Y"|default:"-" }}
+                        </dd>
+
+                    </div>
+
+                </dl>
+
+            </section>
+
+
+
+            <!-- =============================================
+                 CONTACTO DE EMERGENCIA
+                 ============================================= -->
+
+            <section class="detail-card">
+
+                <div class="detail-card-header">
+
+                    <span class="detail-card-icon" aria-hidden="true">
+                        <i class="fa-solid fa-phone-volume"></i>
+                    </span>
+
+                    <h2>Contacto de emergencia</h2>
+
+                </div>
+
+
+                <dl class="detail-data-grid">
+
+
+                    <!-- Nombre -->
+                    <div class="detail-data-item">
+
+                        <dt>Nombre del contacto</dt>
+
+                        <dd>
+                            {{ socio.nombre_contacto_emergencia|default:"-" }}
+                        </dd>
+
+                    </div>
+
+
+                    <!-- Teléfono -->
+                    <div class="detail-data-item">
+
+                        <dt>Teléfono</dt>
+
+                        <dd>
+                            {{ telefono_emergencia_formateado|default:"-" }}
+                        </dd>
+
+                    </div>
+
+
+                    <!-- Relación -->
+                    <div class="detail-data-item">
+
+                        <dt>Relación</dt>
+
+                        <dd>
+                            {{ socio.relacion_contacto_emergencia|default:"-" }}
+                        </dd>
+
+                    </div>
+
+                </dl>
+
+            </section>
+
+
+
+            <!-- =============================================
+                 DOCUMENTACIÓN / APTO FÍSICO
+                 ============================================= -->
+
+            <section class="detail-card">
+
+                <div class="detail-card-header">
+
+                    <span class="detail-card-icon" aria-hidden="true">
+                        <i class="fa-solid fa-file-medical"></i>
+                    </span>
+
+                    <h2>
+                        Documentación / apto físico
+                    </h2>
+
+                </div>
+
+
+                <dl class="detail-data-grid">
+
+
+                    <!-- Estado del apto -->
+                    <div class="detail-data-item">
+
+                        <dt>Estado del apto</dt>
+
+                        <dd>
+
+                            {% if socio.estado_apto_fisico.nombre|lower == "presentado" %}
+
+                                <span class="status-badge status-active">
+                                    Presentado
+                                </span>
+
+
+                            {% elif socio.estado_apto_fisico.nombre|lower == "vencido" %}
+
+                                <span class="status-badge status-danger">
+                                    Vencido
+                                </span>
+
+
+                            {% else %}
+
+                                <span class="status-badge status-warning">
+                                    {{ socio.estado_apto_fisico.nombre|default:"Sin información" }}
+                                </span>
+
+                            {% endif %}
+
+                        </dd>
+
+                    </div>
+
+
+                    <!-- Fecha de presentación -->
+                    <div class="detail-data-item">
+
+                        <dt>
+                            Fecha de presentación
+                        </dt>
+
+                        <dd>
+                            {{ socio.fecha_presentacion_apto|date:"d/m/Y"|default:"-" }}
+                        </dd>
+
+                    </div>
+
+
+                    <!-- Archivo -->
+                    <div class="detail-data-item detail-data-wide">
+
+                        <dt>Archivo</dt>
+
+                        <dd>
+
+                            {% if socio.apto_fisico %}
+
+                                <a
+                                    href="{{ socio.apto_fisico.url }}"
+                                    class="btn btn-outline btn-sm"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                >
+                                    <i
+                                        class="fa-solid fa-arrow-up-right-from-square"
+                                        aria-hidden="true"
+                                    ></i>
+
+                                    Ver apto físico
+                                </a>
+
+                            {% else %}
+
+                                Sin archivo presentado
+
+                            {% endif %}
+
+                        </dd>
+
+                    </div>
+
+                </dl>
+
+            </section>
+
+
+
+            <!-- =============================================
+                 CUENTA DE USUARIO
+                 ============================================= -->
+
+            <section class="detail-card">
+
+                <div class="detail-card-header">
+
+                    <span class="detail-card-icon" aria-hidden="true">
+                        <i class="fa-solid fa-user-shield"></i>
+                    </span>
+
+                    <h2>
+                        Cuenta de usuario
+                    </h2>
+
+                </div>
+
+
+                {% if socio.usuario %}
+
+                    <dl class="detail-data-grid">
+
+
+                        <!-- Username -->
+                        <div class="detail-data-item detail-data-wide">
+
+                            <dt>Username</dt>
+
+                            <dd>
+                                {{ socio.usuario.username|default:"-" }}
+                            </dd>
+
+                        </div>
+
+
+                        <!-- Rol -->
+                        <div class="detail-data-item">
+
+                            <dt>Rol</dt>
+
+                            <dd>
+                                {{ socio.usuario.rol.nombre|default:"Sin información" }}
+                            </dd>
+
+                        </div>
+
+
+                        <!-- Estado del usuario -->
+                        <div class="detail-data-item">
+
+                            <dt>
+                                Estado del usuario
+                            </dt>
+
+                            <dd>
+
+                                {% if socio.usuario.estado_usuario %}
+
+                                    <span
+                                        class="
+                                            status-badge
+
+                                            {% if socio.usuario.estado_usuario.nombre|lower == 'activo' %}
+                                                status-active
+                                            {% else %}
+                                                status-inactive
+                                            {% endif %}
+                                        "
+                                    >
+                                        {{ socio.usuario.estado_usuario.nombre }}
+                                    </span>
+
+                                {% else %}
+
+                                    Sin información
+
+                                {% endif %}
+
+                            </dd>
+
+                        </div>
+
+                    </dl>
+
+
+                {% else %}
+
+                    <p class="detail-empty">
+                        Este socio no tiene una cuenta de usuario asociada.
+                    </p>
+
+                {% endif %}
+
+            </section>
+
+            <section class="detail-card">
+                <div class="detail-card-header">
+                    <span class="detail-card-icon" aria-hidden="true">
+                        <i class="fa-solid fa-id-card"></i>
+                    </span>
+                    <h2>Membresía actual</h2>
+                </div>
+                {% if membresia_actual %}
+                    <dl class="detail-data-grid">
+                        <div class="detail-data-item">
+                            <dt>Plan</dt>
+                            <dd>{{ membresia_actual.plan.nombre }}</dd>
+                        </div>
+                        <div class="detail-data-item">
+                            <dt>Estado</dt>
+                            <dd>
+                                <span class="status-badge {% if membresia_actual.estado_membresia.nombre|lower == 'activa' %}status-active{% else %}status-warning{% endif %}">
+                                    {{ membresia_actual.estado_membresia.nombre }}
+                                </span>
+                            </dd>
+                        </div>
+                        <div class="detail-data-item">
+                            <dt>Fecha de inicio</dt>
+                            <dd>{{ membresia_actual.fecha_inicio|date:"d/m/Y" }}</dd>
+                        </div>
+                        <div class="detail-data-item">
+                            <dt>Fecha de vencimiento</dt>
+                            <dd>{{ membresia_actual.fecha_vencimiento|date:"d/m/Y" }}</dd>
+                        </div>
+                        <div class="detail-data-item detail-data-wide">
+                            {% if membresia_actual.estado_membresia.nombre|lower == "activa" %}
+                                <button type="button" class="btn btn-outline btn-sm" disabled title="Próximamente disponible">
+                                    Suspender membresía
+                                </button>
+                            {% elif membresia_actual.estado_membresia.nombre|lower == "suspendida" %}
+                                <button type="button" class="btn btn-outline btn-sm" disabled title="Próximamente disponible">
+                                    Reanudar membresía
+                                </button>
+                            {% endif %}
+                        </div>
+                    </dl>
+                {% else %}
+                    <p class="detail-empty">Este socio no tiene una membresía activa actualmente.</p>
+                {% endif %}
+            </section>
+
+        </div>
+
+    </div>
+
+
+
+    <!-- =====================================================
+         PESTAÑA: MEMBRESÍA
+         ===================================================== -->
+
+    <section
+        id="panel-membresia"
+        class="detail-card profile-placeholder"
+        role="tabpanel"
+        aria-labelledby="tab-membresia"
+        tabindex="0"
+        hidden
+    >
+
+        <span class="detail-card-icon" aria-hidden="true">
+            <i class="fa-solid fa-id-card"></i>
+        </span>
+
+        <h2>Membresía</h2>
+
+        <p class="detail-empty">
+            Sin información disponible
+        </p>
+
+    </section>
+
+
+
+    <!-- =====================================================
+         PESTAÑA: CUOTAS
+         ===================================================== -->
+
+    <section
+        id="panel-cuotas"
+        class="detail-card profile-placeholder"
+        role="tabpanel"
+        aria-labelledby="tab-cuotas"
+        tabindex="0"
+        hidden
+    >
+
+        <span class="detail-card-icon" aria-hidden="true">
+            <i class="fa-solid fa-file-invoice-dollar"></i>
+        </span>
+
+        <h2>Cuotas</h2>
+
+        <p class="detail-empty">
+            Sin información disponible
+        </p>
+
+    </section>
+
+
+
+    <!-- =====================================================
+         PESTAÑA: ACTIVIDADES
+         ===================================================== -->
+
+    <section
+        id="panel-actividades"
+        class="detail-card profile-placeholder"
+        role="tabpanel"
+        aria-labelledby="tab-actividades"
+        tabindex="0"
+        hidden
+    >
+
+        <span class="detail-card-icon" aria-hidden="true">
+            <i class="fa-solid fa-dumbbell"></i>
+        </span>
+
+        <h2>Actividades</h2>
+
+        <p class="detail-empty">
+            Sin información disponible
+        </p>
+
+    </section>
+
+
+
+    <!-- =====================================================
+         PESTAÑA: ASISTENCIAS
+         ===================================================== -->
+
+    <section
+        id="panel-asistencias"
+        class="detail-card profile-placeholder"
+        role="tabpanel"
+        aria-labelledby="tab-asistencias"
+        tabindex="0"
+        hidden
+    >
+
+        <span class="detail-card-icon" aria-hidden="true">
+            <i class="fa-solid fa-calendar-check"></i>
+        </span>
+
+        <h2>Asistencias</h2>
+
+        <p class="detail-empty">
+            Sin información disponible
+        </p>
+
+    </section>
+
+
+
+    <!-- =====================================================
+         PESTAÑA: DOCUMENTOS
+         ===================================================== -->
+
+    <section
+        id="panel-documentos"
+        class="detail-card profile-placeholder"
+        role="tabpanel"
+        aria-labelledby="tab-documentos"
+        tabindex="0"
+        hidden
+    >
+
+        <span class="detail-card-icon" aria-hidden="true">
+            <i class="fa-solid fa-folder-open"></i>
+        </span>
+
+        <h2>Documentos</h2>
+
+        <p class="detail-empty">
+            Sin información disponible
+        </p>
+
+    </section>
+
+
+</div>
+
+
+
+<!-- =========================================================
+     JAVASCRIPT — PESTAÑAS
+     ========================================================= -->
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    const profile = document.querySelector(".socio-profile");
+
+    if (!profile) {
+        return;
+    }
+
+
+    const tabs = Array.from(
+        profile.querySelectorAll('[role="tab"]')
+    );
+
+
+    function activateTab(tab) {
+
+        tabs.forEach(function (item) {
+
+            const selected = item === tab;
+
+            item.setAttribute(
+                "aria-selected",
+                String(selected)
+            );
+
+            item.tabIndex = selected ? 0 : -1;
+
+
+            const panelId =
+                item.getAttribute("aria-controls");
+
+            const panel =
+                document.getElementById(panelId);
+
+
+            if (panel) {
+                panel.hidden = !selected;
+            }
+
+        });
+
+    }
+
+
+    tabs.forEach(function (tab, index) {
+
+        tab.addEventListener("click", function () {
+            activateTab(tab);
+        });
+
+
+        tab.addEventListener("keydown", function (event) {
+
+            let nextIndex;
+
+
+            if (event.key === "ArrowRight") {
+
+                nextIndex =
+                    (index + 1) % tabs.length;
+
+            } else if (event.key === "ArrowLeft") {
+
+                nextIndex =
+                    (index - 1 + tabs.length)
+                    % tabs.length;
+
+            } else if (event.key === "Home") {
+
+                nextIndex = 0;
+
+            } else if (event.key === "End") {
+
+                nextIndex =
+                    tabs.length - 1;
+
+            } else {
+
+                return;
+
+            }
+
+
+            event.preventDefault();
+
+            activateTab(
+                tabs[nextIndex]
+            );
+
+            tabs[nextIndex].focus();
+
+        });
+
+    });
+
+});
+</script>
+
+
+
+<!-- =========================================================
+     JAVASCRIPT — MODALES
+     ========================================================= -->
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    /*
+     * Configura un modal de confirmación.
+     * Si alguno de los elementos no existe por el estado actual
+     * del socio, simplemente no hace nada.
+     */
+    function configurarModal(
+        botonAbrirId,
+        modalId,
+        botonCancelarId
+    ) {
+
+        const botonAbrir =
+            document.getElementById(botonAbrirId);
+
+        const modal =
+            document.getElementById(modalId);
+
+        const botonCancelar =
+            document.getElementById(botonCancelarId);
+
+
+        if (
+            !botonAbrir ||
+            !modal ||
+            !botonCancelar
+        ) {
+            return;
+        }
+
+
+        /* Abrir */
+        botonAbrir.addEventListener(
+            "click",
+            function () {
+                modal.showModal();
+            }
+        );
+
+
+        /* Cancelar */
+        botonCancelar.addEventListener(
+            "click",
+            function () {
+                modal.close();
+            }
+        );
+
+
+        /* Cerrar haciendo clic en el fondo */
+        modal.addEventListener(
+            "click",
+            function (event) {
+
+                if (event.target === modal) {
+                    modal.close();
+                }
+
+            }
+        );
+
+    }
+
+
+    /* Pendiente -> Activo */
+    configurarModal(
+        "openActivarModal",
+        "activarSocioModal",
+        "cancelActivarSocio"
+    );
+
+
+    /* Activo -> Suspendido */
+    configurarModal(
+        "openSuspenderModal",
+        "suspenderSocioModal",
+        "cancelSuspenderSocio"
+    );
+
+
+    /* Suspendido -> Activo */
+    configurarModal(
+        "openReanudarModal",
+        "reanudarSocioModal",
+        "cancelReanudarSocio"
+    );
+
+
+    /* Inactivo -> Activo */
+    configurarModal(
+        "openReactivarModal",
+        "reactivarSocioModal",
+        "cancelReactivarSocio"
+    );
+
+
+    /* Activo/Suspendido -> Inactivo */
+    configurarModal(
+        "openDarBajaModal",
+        "darBajaModal",
+        "cancelDarBaja"
+    );
+
+
+    /* Eliminación definitiva */
+    configurarModal(
+        "openEliminarModal",
+        "eliminarSocioModal",
+        "cancelEliminarSocio"
+    );
+
+});
+</script>
+
+
+{% endblock %}

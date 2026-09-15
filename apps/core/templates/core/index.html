@@ -1,0 +1,222 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block body_class %}page-index{% endblock %}
+
+{% block body %}
+
+    <!-- Header -->
+    <header class="site-header" id="header">
+        <div class="container header-inner">
+            <a href="{% url 'core:index' %}" class="brand">
+                <img src="{% static 'core/img/logo.png' %}" alt="Malvinas Gym - Barrio Piedrabuena" class="brand-logo">
+            </a>
+
+            <nav class="main-nav" id="mainNav">
+                <ul>
+                    <li><a href="#inicio">Inicio</a></li>
+                    <li><a href="#nosotros">Nosotros</a></li>
+                    <li><a href="#clases">Clases</a></li>
+                    <li><a href="#planes">Planes</a></li>
+                    <li><a href="#galeria">Galería</a></li>
+                    <li><a href="#contacto">Contacto</a></li>
+                </ul>
+            </nav>
+
+            <div class="header-actions">
+                <a href="#contacto" class="btn btn-primary btn-sm">Sumate ahora</a>
+                <button class="nav-toggle" id="navToggle" aria-label="Abrir menú" aria-expanded="false">
+                    <span></span><span></span><span></span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero -->
+    <section class="hero" id="inicio" style="background-image:url('{% static 'core/img/hero/hero-1.jpg' %}')">
+        <div class="hero-overlay"></div>
+        <div class="container hero-content">
+            <span class="hero-eyebrow">{{ gimnasio.barrio }}</span>
+            <h1>Dale forma a tu cuerpo<br>entrenando <strong>con fuerza</strong></h1>
+            <p>Equipamiento moderno, profesores certificados y una comunidad que te acompaña en cada objetivo, dentro y fuera del gimnasio.</p>
+            <div class="hero-actions">
+                <a href="#planes" class="btn btn-primary">Ver planes</a>
+                <a href="#nosotros" class="btn btn-ghost">Conocenos</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Por qué elegirnos -->
+    <section class="section why-us" id="nosotros">
+        <div class="container">
+            <div class="section-title">
+                <span>¿Por qué elegirnos?</span>
+                <h2>Superá tus límites</h2>
+            </div>
+            <div class="grid grid-4">
+                {% for v in ventajas %}
+                <div class="card-feature">
+                    <div class="card-feature-icon"><i class="{{ v.icono }}"></i></div>
+                    <h3>{{ v.titulo }}</h3>
+                    <p>{{ v.texto }}</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+
+    <!-- Clases -->
+    <section class="section classes" id="clases">
+        <div class="container">
+            <div class="section-title">
+                <span>Nuestras clases</span>
+                <h2>Lo que podemos ofrecerte</h2>
+            </div>
+            <div class="grid grid-3">
+                {% for c in clases %}
+                <div class="card-class">
+                    <div class="card-class-img" style="background-image:url('{% static 'core/img/classes/'|add:c.img|add:'.jpg' %}')"></div>
+                    <div class="card-class-info">
+                        <span>{{ c.categoria }}</span>
+                        <h4>{{ c.nombre }}</h4>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+
+    <!-- Banner CTA -->
+    <section class="banner-cta" style="background-image:url('{% static 'core/img/banner-bg.jpg' %}')">
+        <div class="banner-overlay"></div>
+        <div class="container text-center">
+            <h2>Inscribite ahora y accedé a descuentos</h2>
+            <p class="banner-tips">Donde la salud, la estética y el estado físico se encuentran.</p>
+            <a href="#contacto" class="btn btn-primary">Pedir turno</a>
+        </div>
+    </section>
+
+    <!-- Planes -->
+    <section class="section pricing" id="planes">
+        <div class="container">
+            <div class="section-title">
+                <span>Nuestros planes</span>
+                <h2>Elegí tu plan ideal</h2>
+            </div>
+            <div class="grid grid-3">
+                {% for p in planes %}
+                <div class="card-plan {% if p.destacado %}is-featured{% endif %}">
+                    {% if p.destacado %}<span class="plan-badge">Más elegido</span>{% endif %}
+                    <h3>{{ p.nombre }}</h3>
+                    <div class="plan-price">
+                        <span class="currency">$</span>{{ p.precio }}
+                        <span class="plan-period">{{ p.detalle }}</span>
+                    </div>
+                    <ul class="plan-benefits">
+                        {% for b in p.beneficios %}
+                        <li><i class="fa-solid fa-check"></i>{{ b }}</li>
+                        {% endfor %}
+                    </ul>
+                    <a href="#contacto" class="btn {% if p.destacado %}btn-primary{% else %}btn-outline{% endif %} btn-block">Inscribirme</a>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+
+    <!-- Galería -->
+    <section class="gallery" id="galeria">
+        <div class="section-title text-center">
+            <span>Galería</span>
+            <h2>Nuestras instalaciones</h2>
+        </div>
+        <div class="gallery-grid">
+            {% for i in "123456" %}
+            <div class="gallery-item" style="background-image:url('{% static 'core/img/gallery/gallery-'|add:i|add:'.jpg' %}')"></div>
+            {% endfor %}
+        </div>
+    </section>
+
+    <!-- Franja de contacto -->
+    <section class="contact-strip" id="contacto">
+        <div class="container grid grid-3">
+            <div class="contact-item">
+                <i class="fa-solid fa-location-dot"></i>
+                <p>{{ gimnasio.direccion }}</p>
+            </div>
+            <div class="contact-item">
+                <i class="fa-solid fa-phone"></i>
+                <p>{{ gimnasio.telefono }}</p>
+            </div>
+            <div class="contact-item">
+                <i class="fa-solid fa-envelope"></i>
+                <p>{{ gimnasio.email }}</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="site-footer">
+        <div class="container footer-grid">
+            <div class="footer-brand">
+                <img src="{% static 'core/img/logo.png' %}" alt="Malvinas Gym">
+                <p>Más que un gimnasio: una comunidad que entrena junta en el corazón de {{ gimnasio.barrio }}.</p>
+                <div class="footer-social">
+                    <a href="#" aria-label="Facebook"><i class="fa-brands fa-facebook-f"></i></a>
+                    <a href="#" aria-label="Instagram"><i class="fa-brands fa-instagram"></i></a>
+                    <a href="#" aria-label="YouTube"><i class="fa-brands fa-youtube"></i></a>
+                    <a href="#" aria-label="WhatsApp"><i class="fa-brands fa-whatsapp"></i></a>
+                </div>
+            </div>
+            <div class="footer-links">
+                <h4>Enlaces útiles</h4>
+                <ul>
+                    <li><a href="#nosotros">Nosotros</a></li>
+                    <li><a href="#clases">Clases</a></li>
+                    <li><a href="#planes">Planes</a></li>
+                    <li><a href="#contacto">Contacto</a></li>
+                </ul>
+            </div>
+            <div class="footer-links">
+                <h4>Horarios</h4>
+                <ul class="schedule">
+                    <li><span>Lunes a viernes</span><span>7:00 – 22:00</span></li>
+                    <li><span>Sábados</span><span>9:00 – 14:00</span></li>
+                    <li><span>Domingos</span><span>Cerrado</span></li>
+                </ul>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <div class="container">
+                <p>&copy; {% now "Y" %} Malvinas Gym — {{ gimnasio.barrio }}. Todos los derechos reservados.</p>
+            </div>
+        </div>
+    </footer>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Menú móvil (offcanvas simple)
+    const navToggle = document.getElementById('navToggle');
+    const mainNav = document.getElementById('mainNav');
+    navToggle.addEventListener('click', () => {
+        const isOpen = mainNav.classList.toggle('is-open');
+        navToggle.classList.toggle('is-active', isOpen);
+        navToggle.setAttribute('aria-expanded', isOpen);
+    });
+    mainNav.querySelectorAll('a').forEach(link => {
+        link.addEventListener('click', () => {
+            mainNav.classList.remove('is-open');
+            navToggle.classList.remove('is-active');
+            navToggle.setAttribute('aria-expanded', 'false');
+        });
+    });
+
+    // Header sólido al hacer scroll
+    const header = document.getElementById('header');
+    const onScroll = () => header.classList.toggle('is-scrolled', window.scrollY > 40);
+    window.addEventListener('scroll', onScroll);
+    onScroll();
+</script>
+{% endblock %}

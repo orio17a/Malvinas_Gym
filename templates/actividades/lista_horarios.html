@@ -1,0 +1,478 @@
+{% extends "base_gestion.html" %}
+{% load static %}
+
+{% block title %}Horarios | Malvinas GYM{% endblock %}
+
+{% block breadcrumb %}Horarios{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+
+    <div class="page-title">
+        <h1>Horarios</h1>
+    </div>
+
+    {% if perms.actividades.add_horario %}
+        <a href="{% url 'actividades:horario_crear' %}" class="btn btn-primary">
+            <i class="fa-solid fa-plus"></i>
+            Nuevo horario
+        </a>
+    {% endif %}
+
+</div>
+
+
+<div class="gestion-card">
+
+    <div class="list-toolbar">
+
+        <form
+            method="GET"
+            action="{% url 'actividades:horario_lista' %}"
+            class="search-form"
+            id="horariosFilterForm"
+        >
+
+            <!-- ================================================= -->
+            <!-- DÍA -->
+            <!-- ================================================= -->
+
+            <div class="autocomplete-wrapper">
+
+                <div class="search-input-wrapper">
+
+                    <i class="fa-regular fa-calendar"></i>
+
+                    <input
+                        type="text"
+                        id="diaHorario"
+                        placeholder="Día de la semana..."
+                        autocomplete="off"
+                        value="{{ dia_seleccionado }}"
+                    >
+
+                    <!--
+                        Mantiene exactamente el parámetro
+                        que ya recibe Django: dia
+                    -->
+                    <input
+                        type="hidden"
+                        name="dia"
+                        id="diaHorarioValor"
+                        value="{{ dia_seleccionado }}"
+                    >
+
+                </div>
+
+                <div
+                    id="sugerenciasDiaHorario"
+                    class="autocomplete-results"
+                ></div>
+
+            </div>
+
+
+            <!-- ================================================= -->
+            <!-- PROFESOR -->
+            <!-- ================================================= -->
+
+            <div class="autocomplete-wrapper">
+
+                <div class="search-input-wrapper">
+
+                    <i class="fa-solid fa-user-tie"></i>
+
+                    <input
+                        type="text"
+                        id="profesorHorario"
+                        placeholder="Profesor..."
+                        autocomplete="off"
+                        value=""
+                    >
+
+                    <!--
+                        Django necesita el ID del profesor.
+                    -->
+                    <input
+                        type="hidden"
+                        name="profesor"
+                        id="profesorHorarioValor"
+                        value="{{ profesor_seleccionado }}"
+                    >
+
+                </div>
+
+                <div
+                    id="sugerenciasProfesorHorario"
+                    class="autocomplete-results"
+                ></div>
+
+            </div>
+
+
+            <!-- ================================================= -->
+            <!-- TURNO -->
+            <!-- ================================================= -->
+
+            <label
+                class="state-filter"
+                for="turnoHorario"
+            >
+
+                <select
+                    name="turno"
+                    id="turnoHorario"
+                >
+
+                    <option value="">
+                        Todos los turnos
+                    </option>
+
+                    <option
+                        value="manana"
+                        {% if turno_seleccionado == "manana" %}
+                            selected
+                        {% endif %}
+                    >
+                        Mañana
+                    </option>
+
+                    <option
+                        value="tarde"
+                        {% if turno_seleccionado == "tarde" %}
+                            selected
+                        {% endif %}
+                    >
+                        Tarde
+                    </option>
+
+                </select>
+
+            </label>
+
+
+            <!-- ================================================= -->
+            <!-- LIMPIAR -->
+            <!-- ================================================= -->
+
+            <button
+                type="button"
+                id="limpiarFiltrosHorarios"
+                class="btn btn-sm btn-clear-filters
+                {% if dia_seleccionado or profesor_seleccionado or turno_seleccionado %}
+                    is-visible
+                {% endif %}"
+            >
+
+                <i class="fa-solid fa-xmark"></i>
+                Limpiar filtros
+
+            </button>
+
+        </form>
+
+    </div>
+
+
+    <!-- ========================================================= -->
+    <!-- RESULTADOS -->
+    <!-- ========================================================= -->
+
+    <div id="horariosResults">
+
+        <div class="table-wrapper">
+
+            <table class="gestion-table">
+
+                <thead>
+
+                    <tr>
+                        <th>Actividad</th>
+                        <th>Profesor</th>
+                        <th>Día</th>
+                        <th>Horario</th>
+                        <th>Cupo</th>
+                        <th>Inscriptos</th>
+                        <th>Acciones</th>
+                    </tr>
+
+                </thead>
+
+                <tbody>
+
+                    {% for horario in horarios %}
+
+                        <tr>
+
+                            <td>
+                                {{ horario.actividad }}
+                            </td>
+
+                            <td>
+                                {{ horario.profesor }}
+                            </td>
+
+                            <td>
+                                {{ horario.dia }}
+                            </td>
+
+                            <td>
+                                {{ horario.hora_inicio|time:"H:i" }}
+                                a
+                                {{ horario.hora_fin|time:"H:i" }}
+                            </td>
+
+                            <td>
+                                {{ horario.cupo }}
+                            </td>
+
+                            <td>
+                                {{ horario.inscripciones.count }}
+                            </td>
+
+                            <td>
+
+                                <div class="table-actions">
+
+                                    {% if perms.actividades.add_asistencia %}
+
+                                        <a
+                                            href="{% url 'actividades:tomar_asistencia' horario.pk %}"
+                                            class="action-btn"
+                                            title="Tomar asistencia"
+                                        >
+                                            <i class="fa-solid fa-clipboard-check"></i>
+                                        </a>
+
+                                    {% endif %}
+
+
+                                    {% if perms.actividades.view_horario %}
+
+                                        <a
+                                            href="{% url 'actividades:horario_detalle' horario.pk %}"
+                                            class="action-btn"
+                                            title="Ver"
+                                        >
+                                            <i class="fa-solid fa-eye"></i>
+                                        </a>
+
+                                    {% endif %}
+
+
+                                    {% if perms.actividades.change_horario %}
+
+                                        <a
+                                            href="{% url 'actividades:horario_editar' horario.pk %}"
+                                            class="action-btn"
+                                            title="Editar"
+                                        >
+                                            <i class="fa-solid fa-pen"></i>
+                                        </a>
+
+                                    {% endif %}
+
+
+                                    {% if perms.actividades.delete_horario %}
+
+                                        <a
+                                            href="{% url 'actividades:horario_eliminar' horario.pk %}"
+                                            class="action-btn"
+                                            title="Eliminar"
+                                        >
+                                            <i class="fa-solid fa-trash"></i>
+                                        </a>
+
+                                    {% endif %}
+
+                                </div>
+
+                            </td>
+
+                        </tr>
+
+                    {% empty %}
+
+                        <tr>
+                            <td colspan="7">
+                                Todavía no hay horarios registrados.
+                            </td>
+                        </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+
+            {% if horarios.paginator.num_pages > 1 %}
+
+                <div class="pagination">
+
+                    {% if horarios.has_previous %}
+
+                        <a href="?page={{ horarios.previous_page_number }}">
+                            <i class="fa-solid fa-chevron-left"></i>
+                        </a>
+
+                    {% endif %}
+
+                    <span>
+                        Página {{ horarios.number }}
+                        de
+                        {{ horarios.paginator.num_pages }}
+                    </span>
+
+                    {% if horarios.has_next %}
+
+                        <a href="?page={{ horarios.next_page_number }}">
+                            <i class="fa-solid fa-chevron-right"></i>
+                        </a>
+
+                    {% endif %}
+
+                </div>
+
+            {% endif %}
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- ========================================================= -->
+<!-- DATOS PARA JAVASCRIPT -->
+<!-- ========================================================= -->
+
+{{ dias|json_script:"dias-horarios-data" }}
+
+<script id="profesores-horarios-data" type="application/json">
+[
+    {% for profesor in profesores %}
+    {
+        "id": "{{ profesor.pk }}",
+        "nombre": "{{ profesor.apellido|escapejs }}, {{ profesor.nombre|escapejs }}"
+    }{% if not forloop.last %},{% endif %}
+    {% endfor %}
+]
+</script>
+
+
+<!-- ========================================================= -->
+<!-- ESTILOS DEL AUTOCOMPLETADO -->
+<!-- ========================================================= -->
+
+<style>
+
+.autocomplete-wrapper {
+    position: relative;
+    min-width: 210px;
+}
+
+
+/* Caja de sugerencias */
+
+.autocomplete-results {
+    position: absolute;
+    top: calc(100% + 5px);
+    left: 0;
+    right: 0;
+    background: #ffffff;
+    border: 1px solid #dfe3e8;
+    border-radius: 8px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.10);
+    z-index: 1000;
+    display: none;
+    max-height: 240px;
+    overflow-y: auto;
+}
+
+
+/* Mostrar resultados */
+
+.autocomplete-results.is-visible {
+    display: block;
+}
+
+
+/* Cada sugerencia */
+
+.autocomplete-item {
+    padding: 11px 14px;
+    cursor: pointer;
+    font-size: 14px;
+    color: #1f2937;
+    border-bottom: 1px solid #f0f0f0;
+    transition: background 0.15s ease;
+}
+
+
+.autocomplete-item:last-child {
+    border-bottom: none;
+}
+
+
+.autocomplete-item:hover {
+    background: #f5f7fa;
+}
+
+
+/* Texto principal */
+
+.autocomplete-item strong {
+    display: block;
+    font-weight: 600;
+    color: #111827;
+}
+
+
+/* Texto auxiliar */
+
+.autocomplete-item span {
+    display: block;
+    margin-top: 2px;
+    font-size: 12px;
+    color: #6b7280;
+}
+
+
+/* Cuando no hay coincidencias */
+
+.autocomplete-empty {
+    padding: 12px 14px;
+    font-size: 13px;
+    color: #6b7280;
+}
+
+
+/* Ajuste para los buscadores */
+
+.autocomplete-wrapper .search-input-wrapper {
+    width: 100%;
+}
+
+
+/* Responsive */
+
+@media (max-width: 900px) {
+
+    .autocomplete-wrapper {
+        width: 100%;
+    }
+
+}
+
+</style>
+
+
+<!-- ========================================================= -->
+<!-- JAVASCRIPT -->
+<!-- ========================================================= -->
+
+<script src="{% static 'core/js/lista_horarios.js' %}"></script>
+
+{% endblock %}

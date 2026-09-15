@@ -1,0 +1,452 @@
+{% extends "base_gestion.html" %}
+{% load static %}
+
+{% block title %}
+Asistencias | Malvinas GYM
+{% endblock %}
+
+{% block breadcrumb %}
+Asistencias
+{% endblock %}
+
+{% block content %}
+
+<style>
+    .autocomplete-wrapper-asistencia {
+        position: relative;
+        width: 280px;
+        min-width: 280px;
+        flex-shrink: 0;
+    }
+
+    .autocomplete-results-asistencia {
+        position: absolute;
+        top: calc(100% + 6px);
+        left: 0;
+        width: 280px;
+        background: #ffffff;
+        border: 1px solid #dfe3e8;
+        border-radius: 8px;
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.10);
+        display: none;
+        max-height: 260px;
+        overflow-y: auto;
+        z-index: 1000;
+    }
+
+    .autocomplete-results-asistencia.is-visible {
+        display: block;
+    }
+
+    .autocomplete-item-asistencia {
+        padding: 11px 14px;
+        cursor: pointer;
+        border-bottom: 1px solid #f0f0f0;
+        transition: background 0.15s ease;
+    }
+
+    .autocomplete-item-asistencia:last-child {
+        border-bottom: none;
+    }
+
+    .autocomplete-item-asistencia:hover {
+        background: #f5f7fa;
+    }
+
+    .autocomplete-item-asistencia strong {
+        display: block;
+        font-size: 14px;
+        font-weight: 600;
+        color: #111827;
+    }
+
+    .autocomplete-item-asistencia span {
+        display: block;
+        margin-top: 3px;
+        font-size: 12px;
+        color: #6b7280;
+    }
+
+    .autocomplete-empty-asistencia {
+        padding: 12px 14px;
+        font-size: 13px;
+        color: #6b7280;
+    }
+
+    .search-form {
+        flex-wrap: nowrap;
+        align-items: center;
+    }
+
+    .state-filter {
+        flex-shrink: 0;
+    }
+
+    @media (max-width: 900px) {
+        .search-form {
+            flex-wrap: wrap;
+        }
+
+        .autocomplete-wrapper-asistencia {
+            width: 100%;
+            min-width: 0;
+        }
+
+        .autocomplete-results-asistencia {
+            width: 100%;
+        }
+    }
+</style>
+
+{{ socios_autocomplete|json_script:"socios-autocomplete-data" }}
+
+<div class="page-header">
+
+    <div class="page-title">
+        <h1>Asistencias</h1>
+
+        <p>
+            Para registrar asistencia de una clase, andá a Horarios y usá
+            "Tomar asistencia".
+        </p>
+    </div>
+
+    <div style="display: flex; align-items: center; gap: 8px;">
+
+        {% if perms.actividades.view_horario %}
+            <a
+                href="{% url 'actividades:horario_lista' %}"
+                class="btn btn-primary"
+            >
+                <i class="fa-solid fa-clipboard-check"></i>
+                Ir a Horarios
+            </a>
+        {% endif %}
+
+    </div>
+
+</div>
+
+
+<div class="gestion-card">
+
+    <!-- BARRA DE FILTROS -->
+    <div class="list-toolbar">
+
+        <form
+            method="GET"
+            action="{% url 'actividades:asistencia_lista' %}"
+            class="search-form"
+        >
+
+            <!-- BUSCADOR DE SOCIO -->
+            <div class="autocomplete-wrapper-asistencia">
+
+                <div class="search-input-wrapper">
+
+                    <i class="fa-solid fa-magnifying-glass"></i>
+
+                    <input
+                        type="text"
+                        name="buscar"
+                        id="buscarSocio"
+                        value="{{ buscar }}"
+                        placeholder="Nombre o DNI del socio..."
+                        autocomplete="off"
+                    >
+
+                </div>
+
+                <div
+                    id="sugerenciasSocio"
+                    class="autocomplete-results-asistencia"
+                ></div>
+
+            </div>
+
+
+            <!-- FILTRO DE ESTADO -->
+            <label
+                class="state-filter"
+                for="estado"
+            >
+
+                <select
+                    name="estado"
+                    id="estado"
+                    class="search-input-wrapper"
+                    onchange="this.form.submit()"
+                >
+
+                    <option value="">
+                        Todos los estados
+                    </option>
+
+                    <option
+                        value="presente"
+                        {% if estado == 'presente' %}selected{% endif %}
+                    >
+                        Presentes
+                    </option>
+
+                    <option
+                        value="ausente"
+                        {% if estado == 'ausente' %}selected{% endif %}
+                    >
+                        Ausentes
+                    </option>
+
+                </select>
+
+            </label>
+
+
+            <!-- BOTÓN BUSCAR -->
+            <button
+                type="submit"
+                class="btn btn-outline btn-sm"
+            >
+                <i class="fa-solid fa-magnifying-glass"></i>
+                Buscar
+            </button>
+
+
+            <!-- LIMPIAR -->
+            {% if buscar or estado %}
+
+                <a
+                    href="{% url 'actividades:asistencia_lista' %}"
+                    class="btn btn-sm"
+                >
+                    Limpiar
+                </a>
+
+            {% endif %}
+
+        </form>
+
+
+        <!-- EXPORTACIONES -->
+        <div
+            style="
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                flex-wrap: wrap;
+            "
+        >
+
+            <a
+                href="{% url 'actividades:asistencia_exportar_excel' %}?{% if buscar %}buscar={{ buscar|urlencode }}{% endif %}{% if estado %}&estado={{ estado }}{% endif %}"
+                class="btn btn-outline btn-sm"
+            >
+                <i class="fa-solid fa-file-excel"></i>
+                Exportar Excel
+            </a>
+
+
+            <a
+                href="{% url 'actividades:asistencia_exportar_pdf' %}?{% if buscar %}buscar={{ buscar|urlencode }}{% endif %}{% if estado %}&estado={{ estado }}{% endif %}"
+                class="btn btn-outline btn-sm"
+            >
+                <i class="fa-solid fa-file-pdf"></i>
+                Exportar PDF
+            </a>
+
+        </div>
+
+    </div>
+
+
+    <!-- TABLA -->
+    <div class="table-wrapper">
+
+        <table class="gestion-table">
+
+            <thead>
+
+                <tr>
+                    <th>Socio</th>
+                    <th>Horario</th>
+                    <th>Profesor</th>
+                    <th>Fecha</th>
+                    <th>Hora</th>
+                    <th>Estado</th>
+                    <th>Acciones</th>
+                </tr>
+
+            </thead>
+
+
+            <tbody>
+
+                {% for asistencia in asistencias %}
+
+                    <tr>
+
+                        <!-- SOCIO -->
+                        <td>
+
+                            <strong>
+                                {{ asistencia.socio }}
+                            </strong>
+
+                        </td>
+
+
+                        <!-- HORARIO -->
+                        <td>
+                            {{ asistencia.horario }}
+                        </td>
+
+
+                        <!-- PROFESOR -->
+                        <td>
+                            {{ asistencia.profesor }}
+                        </td>
+
+
+                        <!-- FECHA -->
+                        <td>
+                            {{ asistencia.fecha|date:"d/m/Y" }}
+                        </td>
+
+
+                        <!-- HORA -->
+                        <td>
+                            {{ asistencia.hora|time:"H:i" }}
+                        </td>
+
+
+                        <!-- ESTADO -->
+                        <td>
+
+                            {% if asistencia.presente %}
+
+                                <span class="status-badge status-active">
+                                    Presente
+                                </span>
+
+                            {% else %}
+
+                                <span class="status-badge status-warning">
+                                    Ausente
+                                </span>
+
+                            {% endif %}
+
+                        </td>
+
+
+                        <!-- ACCIONES -->
+                        <td>
+
+                            <div class="table-actions">
+
+                                {% if perms.actividades.view_asistencia %}
+
+                                    <a
+                                        href="{% url 'actividades:asistencia_detalle' asistencia.pk %}"
+                                        class="action-btn"
+                                        title="Ver"
+                                    >
+                                        <i class="fa-solid fa-eye"></i>
+                                    </a>
+
+                                {% endif %}
+
+
+                                {% if perms.actividades.change_asistencia %}
+
+                                    <a
+                                        href="{% url 'actividades:asistencia_editar' asistencia.pk %}"
+                                        class="action-btn"
+                                        title="Editar"
+                                    >
+                                        <i class="fa-solid fa-pen"></i>
+                                    </a>
+
+                                {% endif %}
+
+
+                                {% if perms.actividades.delete_asistencia %}
+
+                                    <a
+                                        href="{% url 'actividades:asistencia_eliminar' asistencia.pk %}"
+                                        class="action-btn"
+                                        title="Eliminar"
+                                    >
+                                        <i class="fa-solid fa-trash"></i>
+                                    </a>
+
+                                {% endif %}
+
+                            </div>
+
+                        </td>
+
+                    </tr>
+
+
+                {% empty %}
+
+                    <tr>
+
+                        <td colspan="7">
+                            Todavía no hay asistencias registradas.
+                        </td>
+
+                    </tr>
+
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+
+
+        <!-- PAGINACIÓN -->
+        {% if asistencias.paginator.num_pages > 1 %}
+
+            <div class="pagination">
+
+                {% if asistencias.has_previous %}
+
+                    <a
+                        href="?page={{ asistencias.previous_page_number }}{% if buscar %}&buscar={{ buscar|urlencode }}{% endif %}{% if estado %}&estado={{ estado }}{% endif %}"
+                    >
+                        <i class="fa-solid fa-chevron-left"></i>
+                    </a>
+
+                {% endif %}
+
+
+                <span>
+                    Página {{ asistencias.number }}
+                    de
+                    {{ asistencias.paginator.num_pages }}
+                </span>
+
+
+                {% if asistencias.has_next %}
+
+                    <a
+                        href="?page={{ asistencias.next_page_number }}{% if buscar %}&buscar={{ buscar|urlencode }}{% endif %}{% if estado %}&estado={{ estado }}{% endif %}"
+                    >
+                        <i class="fa-solid fa-chevron-right"></i>
+                    </a>
+
+                {% endif %}
+
+            </div>
+
+        {% endif %}
+
+    </div>
+
+</div>
+
+
+<script src="{% static 'core/js/lista_asistencias.js' %}"></script>
+
+{% endblock %} 

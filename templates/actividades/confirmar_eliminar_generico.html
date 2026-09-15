@@ -1,0 +1,36 @@
+{% extends "base_gestion.html" %}
+
+{% block title %}Eliminar | Malvinas GYM{% endblock %}
+{% block breadcrumb %}Eliminar{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+    <div class="page-title">
+        <h1>Eliminar</h1>
+        <p>Esta acción no se puede deshacer.</p>
+    </div>
+</div>
+
+<div class="gestion-card">
+
+    <p>¿Confirmás que querés eliminar <strong>"{{ objeto }}"</strong>?</p>
+
+    {% if advertencia %}
+        <p class="form-error">{{ advertencia }}</p>
+    {% endif %}
+
+    <form method="post" class="form-actions">
+        {% csrf_token %}
+
+        <button type="submit" class="btn btn-danger">
+            <i class="fa-solid fa-trash"></i>
+            Sí, eliminar
+        </button>
+
+        <a href="{% url cancelar_url %}" class="btn btn-outline">Cancelar</a>
+    </form>
+
+</div>
+
+{% endblock %}

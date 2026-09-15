@@ -1,0 +1,183 @@
+{% extends "base_gestion.html" %}
+{% load static %}
+
+{% block title %}{{ titulo }} | Malvinas GYM{% endblock %}
+{% block breadcrumb %}{{ titulo }}{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+    <div class="page-title">
+        <h1>{{ titulo }}</h1>
+        <p>Formulario de registro y actualización de datos</p>
+    </div>
+
+<a href="{% url cancelar_url %}" class="btn btn-outline btn-sm">
+    <i class="fa-solid fa-arrow-left"></i>
+    Volver
+</a>
+
+
+</div>
+
+<div class="form-blocks-container">
+
+<!-- ========================================= -->
+<!-- FORMULARIO -->
+<!-- ========================================= -->
+
+<form method="post">
+    {% csrf_token %}
+
+    <!-- Errores generales -->
+    {% if form.non_field_errors %}
+    <div class="form-card-block">
+        <div class="form-error">
+            {{ form.non_field_errors }}
+        </div>
+    </div>
+    {% endif %}
+
+
+    <!-- ========================================= -->
+    <!-- DATOS DEL FORMULARIO -->
+    <!-- ========================================= -->
+
+    <div class="form-card-block">
+
+        <div style="
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid #f1f5f9;
+        ">
+
+            <div style="
+                width: 46px;
+                height: 46px;
+                border-radius: 12px;
+                background-color: #fef3c7;
+                color: #1e293b;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 1.2rem;
+                flex-shrink: 0;
+            ">
+                <i class="fa-solid fa-pen-to-square"></i>
+            </div>
+
+            <div>
+                <h3 style="
+                    margin: 0;
+                    font-size: 1.2rem;
+                    font-weight: 800;
+                    color: #0f172a;
+                    text-transform: uppercase;
+                ">
+                    DATOS DEL REGISTRO
+                </h3>
+
+                <p style="
+                    margin: 2px 0 0 0;
+                    font-size: 0.875rem;
+                    color: #64748b;
+                ">
+                    Complete la información correspondiente.
+                </p>
+            </div>
+
+        </div>
+
+
+        <div class="form-grid-2">
+
+            {% for field in form %}
+
+                <div class="field-group">
+
+                    <label for="{{ field.id_for_label }}">
+
+                        {{ field.label }}
+
+                        {% if field.field.required %}
+                            <span style="color: #ef4444;">*</span>
+                        {% endif %}
+
+                    </label>
+
+
+                    {{ field }}
+
+
+                    {% if field.help_text %}
+                        <small style="
+                            color: #64748b;
+                            font-size: 0.8rem;
+                            margin-top: 4px;
+                            display: block;
+                        ">
+                            {{ field.help_text }}
+                        </small>
+                    {% endif %}
+
+
+                    {% if field.errors %}
+                        <span style="
+                            color: #ef4444;
+                            font-size: 0.8rem;
+                            margin-top: 4px;
+                            display: block;
+                        ">
+                            {{ field.errors.0 }}
+                        </span>
+                    {% endif %}
+
+                </div>
+
+            {% endfor %}
+
+        </div>
+
+    </div>
+
+
+    <!-- ========================================= -->
+    <!-- BOTONES -->
+    <!-- ========================================= -->
+
+    <div class="form-footer-actions">
+
+        <a href="{% url cancelar_url %}" class="btn btn-outline btn-sm">
+            Cancelar
+        </a>
+
+        <button type="submit" class="btn btn-primary btn-sm">
+            <i class="fa-solid fa-floppy-disk"></i>
+            Guardar
+        </button>
+
+    </div>
+
+</form>
+
+{% if inscripcion_autocomplete %}
+    {{ socios_autocomplete|json_script:"socios-inscripcion-data" }}
+    {{ horarios_autocomplete|json_script:"horarios-inscripcion-data" }}
+    <script src="{% static 'core/js/inscripcion_socio.js' %}"></script>
+    <script src="{% static 'core/js/inscripcion_horario.js' %}"></script>
+{% endif %}
+
+{% if horario_autocomplete %}
+    {{ actividades_horario_autocomplete|json_script:"actividades-horario-data" }}
+    {{ profesores_horario_autocomplete|json_script:"profesores-horario-data" }}
+    <script src="{% static 'core/js/horario_actividad_profesor.js' %}"></script>
+    <script src="{% static 'core/js/horario_dia.js' %}"></script>
+{% endif %}
+
+
+</div>
+
+{% endblock %}

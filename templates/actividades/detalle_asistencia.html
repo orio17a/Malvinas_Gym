@@ -1,0 +1,187 @@
+{% extends "base_gestion.html" %}
+
+{% block title %}
+Asistencia | Malvinas GYM
+{% endblock %}
+
+{% block breadcrumb %}
+Asistencias
+{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+
+<div class="page-title">
+    <h1>Detalle de Asistencia</h1>
+    <p>
+        {{ asistencia.socio }} —
+        {{ asistencia.horario.actividad }} —
+        {{ asistencia.fecha|date:"d/m/Y" }}
+    </p>
+</div>
+
+<div style="display: flex; align-items: center; gap: 8px;">
+
+    {% if perms.actividades.change_asistencia %}
+        <a href="{% url 'actividades:asistencia_editar' asistencia.pk %}" class="btn btn-primary btn-sm">
+            <i class="fa-solid fa-pen-to-square me-1"></i>
+            Editar
+        </a>
+    {% endif %}
+
+    <a href="{% url 'actividades:asistencia_lista' %}" class="btn btn-outline btn-sm">
+        <i class="fa-solid fa-arrow-left"></i>
+        Volver al listado
+    </a>
+
+</div>
+
+</div>
+
+<!-- Envoltorio general centrado -->
+
+<div class="form-blocks-container">
+
+<!-- BLOQUE 1 -->
+<div class="form-card-block">
+
+    <div class="form-step-title">
+        <span>Paso 1</span>
+
+        <h3>
+            <i class="fa-solid fa-user me-2"></i>
+            Información del Socio
+        </h3>
+    </div>
+
+
+    <div class="field-group">
+
+        <label>Socio</label>
+
+        <div class="detail-value">
+            {{ asistencia.socio }}
+        </div>
+
+    </div>
+
+
+</div>
+
+
+<!-- BLOQUE 2 -->
+<div class="form-card-block">
+
+    <div class="form-step-title">
+        <span>Paso 2</span>
+
+        <h3>
+            <i class="fa-solid fa-calendar-days me-2"></i>
+            Información de la Clase
+        </h3>
+    </div>
+
+
+    <div class="field-group">
+
+        <label>Actividad</label>
+
+        <div class="detail-value">
+            {{ asistencia.horario.actividad }}
+        </div>
+
+    </div>
+
+
+    <div class="field-group">
+
+        <label>Horario</label>
+
+        <div class="detail-value">
+            {{ asistencia.horario }}
+        </div>
+
+    </div>
+
+
+    <div class="field-group">
+
+        <label>Profesor</label>
+
+        <div class="detail-value">
+            {{ asistencia.profesor }}
+        </div>
+
+    </div>
+
+
+    <div class="field-group">
+
+        <label>Fecha</label>
+
+        <div class="detail-value">
+            {{ asistencia.fecha|date:"d/m/Y" }}
+        </div>
+
+    </div>
+
+
+    <div class="field-group">
+
+        <label>Hora</label>
+
+        <div class="detail-value">
+            {{ asistencia.hora|time:"H:i" }}
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- BLOQUE 3 -->
+<div class="form-card-block">
+
+    <div class="form-step-title">
+        <span>Paso 3</span>
+
+        <h3>
+            <i class="fa-solid fa-clipboard-check me-2"></i>
+            Estado de la Asistencia
+        </h3>
+    </div>
+
+
+    <div class="field-group">
+
+        <label>Estado</label>
+
+        <div class="detail-value">
+
+            {% if asistencia.presente %}
+
+                <span class="status-badge status-active">
+                    <i class="fa-solid fa-check me-1"></i>
+                    Presente
+                </span>
+
+            {% else %}
+
+                <span class="status-badge status-warning">
+                    <i class="fa-solid fa-xmark me-1"></i>
+                    Ausente
+                </span>
+
+            {% endif %}
+
+        </div>
+
+    </div>
+
+</div>
+
+
+</div>
+
+{% endblock %}

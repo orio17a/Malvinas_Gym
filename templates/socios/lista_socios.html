@@ -1,0 +1,422 @@
+{% extends "base_gestion.html" %}
+
+
+{% block title %}
+Socios | Malvinas GYM
+{% endblock %}
+
+{% block breadcrumb %}Socios{% endblock %}
+
+
+{% block content %}
+
+
+<div class="page-header">
+
+    <div class="page-title">
+
+        <h1>
+            Socios
+        </h1>
+
+        <p>
+            Administración de socios del gimnasio
+        </p>
+
+    </div>
+
+
+    {% if perms.socios.add_socio %}
+
+        <a
+            href="{% url 'socios:crear' %}"
+            class="btn btn-primary"
+        >
+
+            <i class="fa-solid fa-user-plus"></i>
+
+            Nuevo socio
+
+        </a>
+
+    {% endif %}
+
+</div>
+
+
+<div class="stats-grid">
+
+    <div class="stat-card">
+
+        <div class="stat-icon stat-icon-total">
+            <i class="fa-solid fa-users"></i>
+        </div>
+
+        <div class="stat-content">
+
+            <span class="stat-label">
+                Socios totales
+            </span>
+
+            <strong class="stat-number">
+                {{ total_socios }}
+            </strong>
+
+        </div>
+
+    </div>
+
+
+    <div class="stat-card">
+
+        <div class="stat-icon stat-icon-active">
+            <i class="fa-solid fa-user-check"></i>
+        </div>
+
+        <div class="stat-content">
+
+            <span class="stat-label">
+                Socios activos
+            </span>
+
+            <strong class="stat-number">
+                {{ socios_activos }}
+            </strong>
+
+        </div>
+
+    </div>
+
+
+    <div class="stat-card">
+
+        <div class="stat-icon stat-icon-inactive">
+            <i class="fa-solid fa-user-xmark"></i>
+        </div>
+
+        <div class="stat-content">
+
+            <span class="stat-label">
+                Socios inactivos
+            </span>
+
+            <strong class="stat-number">
+                {{ socios_inactivos }}
+            </strong>
+
+        </div>
+
+    </div>
+
+
+    <div class="stat-card">
+
+        <div class="stat-icon stat-icon-warning">
+            <i class="fa-solid fa-file-medical"></i>
+        </div>
+
+        <div class="stat-content">
+
+            <span class="stat-label">
+                Aptos pendientes
+            </span>
+
+            <strong class="stat-number">
+                {{ aptos_pendientes }}
+            </strong>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<div class="gestion-card">
+
+
+    <!-- =========================
+         BUSCADOR
+    ========================== -->
+
+    <div class="list-toolbar">
+
+        <form
+            method="GET"
+            action="{% url 'socios:lista' %}"
+            class="search-form"
+            id="searchForm"
+        >
+
+            <input type="hidden" name="orden" value="{{ orden }}">
+            <input type="hidden" name="direccion" value="{{ direccion }}">
+            <div class="search-input-wrapper">
+
+                <i class="fa-solid fa-magnifying-glass"></i>
+
+                <input
+                    type="text"
+                    name="buscar"
+                    id="buscarSocio"
+                    aria-label="Buscar socios por DNI, nombre o apellido"
+                    value="{{ buscar }}"
+                    placeholder="DNI, nombre o apellido..."
+                    autocomplete="off"
+                >
+
+                <button
+                    type="button"
+                    class="search-clear"
+                    id="clearSearch"
+                    title="Limpiar búsqueda"
+                    aria-label="Limpiar búsqueda"
+                    {% if not buscar %}hidden{% endif %}
+                >
+                        <i class="fa-solid fa-xmark"></i>
+                </button>
+
+            </div>
+
+            <label class="socios-state-filter" for="estadoSocio">
+                <select
+                    name="estado"
+                    id="estadoSocio"
+                >
+                    <option value="">
+                        Todos los estados
+                    </option>
+
+                    {% for estado_item in estados_disponibles %}
+
+                        <option
+                            value="{{ estado_item.nombre }}"
+                            {% if estado_item.nombre|lower == estado|lower %}selected{% endif %}
+                        >
+                            {{ estado_item.nombre }}
+                        </option>
+
+                    {% endfor %}
+
+                </select>
+
+            </label>
+            <details class="socios-situaciones">
+                <summary>Situación</summary>
+                <div class="socios-situaciones-menu">
+                    {% for valor, etiqueta in opciones_situacion %}
+                        <label><input type="checkbox" name="situacion" value="{{ valor }}" {% if valor in situaciones %}checked{% endif %}> {{ etiqueta }}</label>
+                    {% endfor %}
+                </div>
+            </details>
+            <button type="submit" name="exportar" value="excel" class="btn btn-outline" id="exportarSocios">Exportar Excel</button>        </form>
+
+    </div>
+
+
+    <!-- =========================
+         INFORMACIÓN DE BÚSQUEDA
+    ========================== -->
+
+    {% include "socios/_resultados_socios.html" %}
+
+</div>
+
+
+<!-- =========================
+     BÚSQUEDA AUTOMÁTICA
+========================== -->
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    const inputBusqueda =
+        document.getElementById("buscarSocio");
+
+    const formularioBusqueda =
+        document.getElementById("searchForm");
+
+    if (!inputBusqueda || !formularioBusqueda) {
+        return;
+    }
+
+    const botonLimpiar =
+        document.getElementById("clearSearch");
+
+    const informacionResultados =
+        document.getElementById("searchResultInfo");
+
+    const resultados =
+        document.getElementById("sociosResults");
+
+    if (!botonLimpiar || !informacionResultados || !resultados) {
+        return;
+    }
+
+    const ordenInput = formularioBusqueda.elements.orden;
+    const direccionInput = formularioBusqueda.elements.direccion;
+
+    const filtroEstado = document.getElementById("estadoSocio");
+
+    let temporizador;
+    let solicitudActiva;
+
+    async function actualizarResultados(url) {
+        if (solicitudActiva) {
+            solicitudActiva.abort();
+        }
+
+        const solicitud = new AbortController();
+        solicitudActiva = solicitud;
+
+        try {
+            const respuesta = await fetch(url, {
+                headers: {
+                    "X-Requested-With": "XMLHttpRequest"
+                },
+                signal: solicitud.signal
+            });
+
+            if (!respuesta.ok) {
+                throw new Error("No se pudo actualizar la lista de socios.");
+            }
+
+            const documento = new DOMParser().parseFromString(
+                await respuesta.text(),
+                "text/html"
+            );
+
+            const nuevaInformacion =
+                documento.getElementById("searchResultInfo");
+
+            const nuevosResultados =
+                documento.getElementById("sociosResults");
+
+            if (!nuevaInformacion || !nuevosResultados) {
+                throw new Error("La respuesta de búsqueda no es válida.");
+            }
+
+            if (solicitud.signal.aborted || solicitudActiva !== solicitud) {
+                return;
+            }
+
+            informacionResultados.innerHTML = nuevaInformacion.innerHTML;
+            resultados.innerHTML = nuevosResultados.innerHTML;
+
+            window.history.replaceState({}, "", url);
+        } catch (error) {
+            if (error.name !== "AbortError" && !solicitud.signal.aborted) {
+                informacionResultados.textContent =
+                    "No se pudo actualizar la búsqueda. Presioná Enter para reintentar.";
+                console.error(error);
+            }
+        }
+    }
+
+    function buscarSocios() {
+        const parametros = new URLSearchParams();
+        if (ordenInput.value) {
+            parametros.set("orden", ordenInput.value);
+            parametros.set("direccion", direccionInput.value);
+        }
+        formularioBusqueda.querySelectorAll('[name="situacion"]:checked').forEach(function (checkbox) {
+            parametros.append("situacion", checkbox.value);
+        });
+        const termino = inputBusqueda.value.trim();
+
+        if (termino) {
+            parametros.set("buscar", termino);
+        }
+
+        if (filtroEstado.value) parametros.set("estado", filtroEstado.value);
+
+        botonLimpiar.hidden = !inputBusqueda.value;
+
+        const query = parametros.toString();
+        const url = formularioBusqueda.action + (query ? "?" + query : "");
+
+        actualizarResultados(url);
+    }
+
+    inputBusqueda.addEventListener("input", function () {
+        clearTimeout(temporizador);
+
+        if (solicitudActiva) {
+            solicitudActiva.abort();
+        }
+
+        botonLimpiar.hidden = !this.value;
+        temporizador = setTimeout(buscarSocios, 350);
+    });
+
+    inputBusqueda.addEventListener("keydown", function (event) {
+        if (event.key === "Enter" && !event.isComposing) {
+            event.preventDefault();
+            clearTimeout(temporizador);
+            buscarSocios();
+        }
+    });
+
+    formularioBusqueda.addEventListener("submit", function (event) {
+        if (event.submitter && event.submitter.id === "exportarSocios") {
+            clearTimeout(temporizador);
+            event.preventDefault();
+            const parametros = new URLSearchParams(new FormData(formularioBusqueda));
+            parametros.set("exportar", "excel");
+            window.location.assign(formularioBusqueda.action + "?" + parametros.toString());
+            return;
+        }
+        event.preventDefault();
+        clearTimeout(temporizador);
+        buscarSocios();
+    });
+
+    botonLimpiar.addEventListener("click", function () {
+        clearTimeout(temporizador);
+        inputBusqueda.value = "";
+        botonLimpiar.hidden = true;
+        inputBusqueda.focus();
+        buscarSocios();
+    });
+
+    formularioBusqueda.addEventListener("change", function (event) {
+        if (event.target === filtroEstado || event.target.matches('[name="situacion"]')) {
+            clearTimeout(temporizador);
+            buscarSocios();
+        }
+    });
+    resultados.addEventListener("click", function (event) {
+        const enlace = event.target.closest(".socios-sort-link");
+        if (!enlace || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
+        event.preventDefault();
+        clearTimeout(temporizador);
+        ordenInput.value = enlace.dataset.orden;
+        direccionInput.value = enlace.dataset.direccion;
+        buscarSocios();
+    });
+    resultados.addEventListener("click", function (event) {
+        const enlace = event.target.closest(".pagination a");
+
+        if (!enlace || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) {
+            return;
+        }
+
+        event.preventDefault();
+        clearTimeout(temporizador);
+        const parametrosPagina = new URL(enlace.href).searchParams;
+        if (inputBusqueda.value.trim() !== (parametrosPagina.get("buscar") || "") || filtroEstado.value !== (parametrosPagina.get("estado") || "") || ordenInput.value !== (parametrosPagina.get("orden") || "") || (ordenInput.value && direccionInput.value !== parametrosPagina.get("direccion"))) {
+            buscarSocios();
+            return;
+        }
+        const actuales = Array.from(formularioBusqueda.querySelectorAll('[name="situacion"]:checked'), item => item.value).sort().join(",");
+        if (actuales !== parametrosPagina.getAll("situacion").sort().join(",")) {
+            buscarSocios();
+            return;
+        }
+        actualizarResultados(enlace.href);
+    });
+
+});
+</script>
+
+
+{% endblock %}

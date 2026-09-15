@@ -1,0 +1,43 @@
+{% extends "base_gestion.html" %}
+
+{% block title %}Eliminar {{ socio }} | Malvinas GYM{% endblock %}
+{% block breadcrumb %}Socios{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+    <div class="page-title">
+        <h1>Eliminar socio</h1>
+        <p>Esta acción no se puede deshacer.</p>
+    </div>
+</div>
+
+<div class="gestion-card">
+
+    <p>
+        ¿Confirmás que querés eliminar a <strong>{{ socio }}</strong>
+        (DNI {{ socio.dni }})?
+    </p>
+
+    <p>
+        Si el socio tiene membresías, cuotas u otros registros asociados,
+        no va a poder eliminarse: en ese caso, la opción correcta es
+        cambiar su estado a "Inactivo" en vez de borrarlo.
+    </p>
+
+    <form method="post" class="form-actions">
+        {% csrf_token %}
+
+        <button type="submit" class="btn btn-danger">
+            <i class="fa-solid fa-trash"></i>
+            Sí, eliminar
+        </button>
+
+        <a href="{% url 'socios:detalle' socio.pk %}" class="btn btn-outline">
+            Cancelar
+        </a>
+    </form>
+
+</div>
+
+{% endblock %}

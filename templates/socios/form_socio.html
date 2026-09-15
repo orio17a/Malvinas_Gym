@@ -1,0 +1,636 @@
+{% extends "base_gestion.html" %}
+
+{% block title %}
+{{ titulo|default:"Nuevo socio" }} | Malvinas GYM
+{% endblock %}
+
+{% block breadcrumb %}Socios{% endblock %}
+
+{% block content %}
+
+<div class="socio-profile socio-form-header">
+
+    <header class="profile-header gestion-card">
+
+        <div class="profile-identity">
+
+            <!-- Volver -->
+            <a
+                href="{% if es_edicion and next == 'detalle' %}{% url 'socios:detalle' socio.pk %}{% else %}{% url 'socios:lista' %}{% endif %}"
+                class="profile-back"
+                aria-label="{% if es_edicion and next == 'detalle' %}Volver al detalle del socio{% else %}Volver a socios{% endif %}"
+                title="{% if es_edicion and next == 'detalle' %}Volver al detalle del socio{% else %}Volver a socios{% endif %}"
+            >
+                <i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
+            </a>
+
+
+            <!-- Encabezado -->
+            <div class="profile-name">
+
+                {% if es_edicion %}
+
+                    <span class="detail-eyebrow">
+                        Editar socio
+                    </span>
+
+                    <h1>
+                        {{ socio.nombre }} {{ socio.apellido }}
+                    </h1>
+
+                    <p class="profile-meta">
+                        Modificá los datos del socio.
+                    </p>
+
+                {% else %}
+
+                    <span class="detail-eyebrow">
+                        Registro de socio
+                    </span>
+
+                    <h1>
+                        Nuevo socio
+                    </h1>
+
+                    <p class="profile-meta">
+                        Completá los datos del socio.
+                        Los campos marcados con * son obligatorios.
+                    </p>
+
+                {% endif %}
+
+            </div>
+
+        </div>
+
+    </header>
+
+</div>
+
+<form
+    method="post"
+    enctype="multipart/form-data"
+    class="socio-form"
+    novalidate
+>
+    {% csrf_token %}
+    {% if es_edicion %}
+        <input type="hidden" name="next" value="{{ next }}">
+    {% endif %}
+
+
+    {% if form.non_field_errors %}
+        <div class="form-errors" role="alert">
+            {% for error in form.non_field_errors %}
+                <p>{{ error }}</p>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+
+    <!-- ======================================
+         DATOS PERSONALES
+    ======================================= -->
+
+    <section class="form-section">
+
+        <div class="form-section-header">
+            <div class="form-section-icon">
+                <i class="fa-solid fa-user"></i>
+            </div>
+
+            <div>
+                <h2>Datos personales</h2>
+                <p>Información principal e identificación del socio.</p>
+            </div>
+        </div>
+
+        <div class="form-grid">
+
+            <div class="form-field">
+                <label for="{{ form.nombre.id_for_label }}">
+                    Nombre *
+                </label>
+
+                {{ form.nombre }}
+
+                {% for error in form.nombre.errors %}
+                    <p class="field-error">{{ error }}</p>
+                {% endfor %}
+            </div>
+
+
+            <div class="form-field">
+                <label for="{{ form.apellido.id_for_label }}">
+                    Apellido *
+                </label>
+
+                {{ form.apellido }}
+
+                {% for error in form.apellido.errors %}
+                    <p class="field-error">{{ error }}</p>
+                {% endfor %}
+            </div>
+
+            <div class="form-field">
+                <label for="{{ form.dni.id_for_label }}">
+                    DNI *
+                </label>
+
+                {{ form.dni }}
+
+                {% for error in form.dni.errors %}
+                    <p class="field-error">{{ error }}</p>
+                {% endfor %}
+            </div>
+
+            <div class="form-field">
+                <label for="{{ form.fecha_nacimiento.id_for_label }}">
+                    Fecha de nacimiento
+                </label>
+
+                <div class="birth-date-control">
+                    {{ form.fecha_nacimiento }}
+                    <button
+                        type="button"
+                        class="birth-date-button"
+                        id="openBirthCalendar"
+                        aria-label="Abrir calendario de fecha de nacimiento"
+                        title="Elegir fecha de nacimiento"
+                        aria-controls="birthCalendar"
+                    >
+                        <i class="fa-solid fa-calendar-days" aria-hidden="true"></i>
+                    </button>
+                    <input
+                        type="date"
+                        id="birthCalendar"
+                        class="birth-date-native"
+                        tabindex="-1"
+                        aria-label="Calendario de fecha de nacimiento"
+                    >
+                </div>
+
+                {% for error in form.fecha_nacimiento.errors %}
+                    <p class="field-error">{{ error }}</p>
+                {% endfor %}
+            </div>
+
+
+            <div class="form-field">
+                <label for="{{ form.fecha_ingreso.id_for_label }}">
+                    Fecha de ingreso *
+                </label>
+
+                <div class="date-field-wrapper">
+                    {{ form.fecha_ingreso }}
+
+                    <button
+                        type="button"
+                        class="btn-today"
+                        data-target="id_fecha_ingreso"
+                    >
+                        Hoy
+                    </button>
+                </div>
+
+                {% for error in form.fecha_ingreso.errors %}
+                    <p class="field-error">{{ error }}</p>
+                {% endfor %}
+            </div>
+
+        </div>
+
+    </section>
+    {% if responsable_form %}
+        <div id="responsableSection" hidden>
+            <section class="form-section" aria-labelledby="responsableTitle">
+                <div class="form-section-header">
+                    <div class="form-section-icon">
+                        <i class="fa-solid fa-user-shield" aria-hidden="true"></i>
+                    </div>
+                    <div>
+                        <h2 id="responsableTitle">Datos del responsable</h2>
+                        <p>El socio es menor de 15 años. Es obligatorio registrar un responsable.</p>
+                    </div>
+                </div>
+                {% if responsable_form.non_field_errors %}
+                    <div class="form-errors" role="alert">
+                        {{ responsable_form.non_field_errors }}
+                    </div>
+                {% endif %}
+                <div class="form-grid">
+                    {% for campo in responsable_form %}
+                        <div class="form-field">
+                            <label for="{{ campo.id_for_label }}">
+                                {{ campo.label }}{% if campo.field.required %} *{% endif %}
+                            </label>
+                            {{ campo }}
+                            {% for error in campo.errors %}
+                                <p class="field-error">{{ error }}</p>
+                            {% endfor %}
+                        </div>
+                    {% endfor %}
+                </div>
+            </section>
+        </div>
+    {% endif %}
+
+
+    <!-- ======================================
+         CONTACTO
+    ======================================= -->
+
+    <section class="form-section">
+
+        <div class="form-section-header">
+            <div class="form-section-icon">
+                <i class="fa-solid fa-address-book"></i>
+            </div>
+
+            <div>
+                <h2>Contacto</h2>
+                <p>Información para comunicarse con el socio.</p>
+            </div>
+        </div>
+
+
+        <div class="form-grid">
+
+            <div class="form-field">
+                <label for="{{ form.email.id_for_label }}">
+                    Email
+                </label>
+
+                {{ form.email }}
+
+                {% for error in form.email.errors %}
+                    <p class="field-error">{{ error }}</p>
+                {% endfor %}
+            </div>
+
+
+            <div class="form-field">
+                <label for="{{ form.telefono.id_for_label }}">
+                    Teléfono
+                </label>
+
+                {{ form.telefono }}
+
+                {% for error in form.telefono.errors %}
+                    <p class="field-error">{{ error }}</p>
+                {% endfor %}
+            </div>
+
+
+            <div class="form-field form-field-full">
+                <label for="{{ form.domicilio.id_for_label }}">
+                    Domicilio
+                </label>
+
+                {{ form.domicilio }}
+
+                {% for error in form.domicilio.errors %}
+                    <p class="field-error">{{ error }}</p>
+                {% endfor %}
+            </div>
+
+
+            <div class="form-field form-field-full">
+                <label for="{{ form.nombre_contacto_emergencia.id_for_label }}">
+                    Nombre del contacto de emergencia
+                </label>
+                {{ form.nombre_contacto_emergencia }}
+            </div>
+
+            <div class="form-field">
+                <label for="{{ form.telefono_emergencia.id_for_label }}">
+                    Teléfono de emergencia
+                </label>
+                {{ form.telefono_emergencia }}
+            </div>
+
+            <div class="form-field">
+                <label for="{{ form.relacion_contacto_emergencia.id_for_label }}">
+                    Relación
+                </label>
+                {{ form.relacion_contacto_emergencia }}
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- ======================================
+         APTO FÍSICO
+    ======================================= -->
+
+    <section class="form-section">
+
+        <div class="form-section-header">
+            <div class="form-section-icon">
+                <i class="fa-solid fa-file-medical"></i>
+            </div>
+
+            <div>
+                <h2>Apto físico</h2>
+                <p>Documentación y estado del apto físico.</p>
+            </div>
+        </div>
+
+
+        <div class="form-grid">
+
+            <div class="form-field form-field-full">
+                <label for="{{ form.apto_fisico.id_for_label }}">
+                    Archivo del apto
+                </label>
+
+                {{ form.apto_fisico }}
+
+                <span class="form-help">
+                    Formatos permitidos: PDF, JPG, JPEG o PNG. Máximo 5 MB.
+                </span>
+
+                {% for error in form.apto_fisico.errors %}
+                    <p class="field-error">{{ error }}</p>
+                {% endfor %}
+            </div>
+
+
+            <div class="form-field">
+                <label for="{{ form.estado_apto_fisico.id_for_label }}">
+                    Estado del apto *
+                </label>
+
+                {{ form.estado_apto_fisico }}
+
+                {% for error in form.estado_apto_fisico.errors %}
+                    <p class="field-error">{{ error }}</p>
+                {% endfor %}
+            </div>
+
+
+            <div class="form-field">
+                <label for="{{ form.fecha_presentacion_apto.id_for_label }}">
+                    Fecha de presentación
+                </label>
+
+                <div class="date-field-wrapper">
+                    {{ form.fecha_presentacion_apto }}
+
+                    <button
+                        type="button"
+                        class="btn-today"
+                        data-target="id_fecha_presentacion_apto"
+                    >
+                        Hoy
+                    </button>
+                </div>
+
+                {% for error in form.fecha_presentacion_apto.errors %}
+                    <p class="field-error">{{ error }}</p>
+                {% endfor %}
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- ======================================
+         ACCIONES
+    ======================================= -->
+
+    <div class="form-actions">
+
+        <a
+            href="{% if es_edicion and next == 'detalle' %}{% url 'socios:detalle' socio.pk %}{% else %}{% url 'socios:lista' %}{% endif %}"
+            class="btn btn-outline"
+        >
+            Cancelar
+        </a>
+
+        <button
+            type="submit"
+            class="btn btn-primary"
+        >
+
+            {% if es_edicion %}
+
+                <i class="fa-solid fa-floppy-disk"></i>
+                Guardar cambios
+
+            {% else %}
+
+                <i class="fa-solid fa-user-plus"></i>
+                Registrar socio
+
+            {% endif %}
+
+        </button>
+
+    </div>
+
+</form>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const input = document.getElementById("{{ form.fecha_nacimiento.id_for_label|escapejs }}");
+    const calendar = document.getElementById("birthCalendar");
+    const button = document.getElementById("openBirthCalendar");
+
+    button.addEventListener("click", function () {
+        const parts = input.value.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+        calendar.value = parts ? `${parts[3]}-${parts[2]}-${parts[1]}` : "";
+
+        try {
+            if (typeof calendar.showPicker === "function") {
+                calendar.showPicker();
+                return;
+            }
+        } catch (error) {
+            // Mostrar el control nativo si el navegador no permite abrirlo.
+        }
+        calendar.classList.add("is-visible");
+        calendar.tabIndex = 0;
+        calendar.focus();
+    });
+
+    calendar.addEventListener("change", function () {
+        if (!calendar.value) return;
+        const [year, month, day] = calendar.value.split("-");
+        input.value = `${day}/${month}/${year}`;
+        input.dispatchEvent(new Event("input", { bubbles: true }));
+        input.dispatchEvent(new Event("change", { bubbles: true }));
+        calendar.classList.remove("is-visible");
+        calendar.tabIndex = -1;
+        input.focus();
+    });
+});
+</script>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    const camposFecha = [
+        "id_fecha_nacimiento",
+        "id_fecha_ingreso",
+        "id_fecha_presentacion_apto"
+    ];
+
+    camposFecha.forEach(function (idCampo) {
+
+        const input = document.getElementById(idCampo);
+
+        if (!input) {
+            return;
+        }
+
+        input.addEventListener("input", function (event) {
+            if (event.inputType && event.inputType.startsWith("delete")) {
+                return;
+            }
+
+            const numeros = this.value
+                .replace(/\D/g, "")
+                .substring(0, 8);
+
+            let valorFormateado = numeros.substring(0, 2);
+
+            if (numeros.length >= 2) {
+                valorFormateado += "/";
+            }
+
+            if (numeros.length > 2) {
+                valorFormateado += numeros.substring(2, 4);
+            }
+
+            if (numeros.length >= 4) {
+                valorFormateado += "/";
+            }
+
+            if (numeros.length > 4) {
+                valorFormateado += numeros.substring(4, 8);
+            }
+
+            this.value = valorFormateado.substring(0, 10);
+        });
+
+    });
+
+
+    const botonesHoy =
+        document.querySelectorAll(".btn-today");
+
+    botonesHoy.forEach(function (boton) {
+
+        boton.addEventListener("click", function () {
+
+            const targetId =
+                this.dataset.target;
+
+            const input =
+                document.getElementById(targetId);
+
+            if (!input) {
+                return;
+            }
+
+            const hoy = new Date();
+
+            const dia =
+                String(hoy.getDate()).padStart(2, "0");
+
+            const mes =
+                String(hoy.getMonth() + 1).padStart(2, "0");
+
+            const anio =
+                hoy.getFullYear();
+
+            input.value =
+                `${dia}/${mes}/${anio}`;
+        });
+
+    });
+
+});
+</script>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    function formatearTelefono(valor) {
+        const numeros = valor.replace(/\D/g, "").slice(0, 10);
+
+        if (numeros.length <= 2) {
+            return numeros;
+        }
+
+        if (numeros.length <= 6) {
+            return numeros.slice(0, 2) + " " + numeros.slice(2);
+        }
+
+        return (
+            numeros.slice(0, 2) +
+            " " +
+            numeros.slice(2, 6) +
+            "-" +
+            numeros.slice(6)
+        );
+    }
+
+    document.querySelectorAll(".telefono-mask").forEach(function (input) {
+
+        input.addEventListener("input", function () {
+            this.value = formatearTelefono(this.value);
+        });
+
+        if (input.value) {
+            input.value = formatearTelefono(input.value);
+        }
+
+    });
+
+});
+</script>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const seccion = document.getElementById("responsableSection");
+    const nacimiento = document.getElementById("{{ form.fecha_nacimiento.id_for_label|escapejs }}");
+    if (!seccion || !nacimiento) return;
+
+    function actualizarResponsable() {
+        const partes = nacimiento.value.trim().match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+        let requiere = false;
+        if (partes) {
+            const dia = Number(partes[1]);
+            const mes = Number(partes[2]);
+            const anio = Number(partes[3]);
+            const fecha = new Date(0);
+            fecha.setFullYear(anio, mes - 1, dia);
+            fecha.setHours(0, 0, 0, 0);
+            const hoy = new Date();
+            hoy.setHours(0, 0, 0, 0);
+            const valida = anio > 0 && fecha.getFullYear() === anio
+                && fecha.getMonth() === mes - 1 && fecha.getDate() === dia
+                && fecha <= hoy;
+            if (valida) {
+                let edad = hoy.getFullYear() - anio;
+                if (hoy.getMonth() < mes - 1 || (hoy.getMonth() === mes - 1 && hoy.getDate() < dia)) edad--;
+                requiere = edad < 15;
+            }
+        }
+        seccion.hidden = !requiere;
+        seccion.querySelectorAll("input, select, textarea").forEach(function (campo) {
+            campo.disabled = !requiere;
+        });
+    }
+
+    nacimiento.addEventListener("input", actualizarResponsable);
+    nacimiento.addEventListener("change", actualizarResponsable);
+    actualizarResponsable();
+});
+</script>
+{% endblock %}

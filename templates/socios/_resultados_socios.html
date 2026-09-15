@@ -1,0 +1,196 @@
+    <div class="table-info socios-list-summary" id="searchResultInfo" aria-live="polite">
+        <span>{{ cantidad_resultados }} resultado{{ cantidad_resultados|pluralize }}{% if buscar %} · “{{ buscar }}”{% endif %}</span>
+
+
+        
+    </div>
+
+
+    <!-- =========================
+         TABLA
+    ========================== -->
+
+    <div class="table-wrapper" id="sociosResults">
+
+        <table class="gestion-table">
+
+            <thead>
+
+                <tr>
+                    <th>DNI</th>
+                    <th aria-sort="{% if orden == 'nombre' %}{% if direccion == 'asc' %}ascending{% else %}descending{% endif %}{% else %}none{% endif %}">
+                        <a class="socios-sort-link" href="?{{ enlaces_orden.nombre }}" data-orden="nombre" data-direccion="{% if orden == 'nombre' and direccion == 'asc' %}desc{% else %}asc{% endif %}">
+                            Socio <span aria-hidden="true">{% if orden == 'nombre' %}{% if direccion == 'asc' %}↑{% else %}↓{% endif %}{% else %}↕{% endif %}</span>
+                        </a>
+                    </th>
+                    <th>Contacto</th>
+                    <th aria-sort="{% if orden == 'estado' %}{% if direccion == 'asc' %}ascending{% else %}descending{% endif %}{% else %}none{% endif %}">
+                        <a class="socios-sort-link" href="?{{ enlaces_orden.estado }}" data-orden="estado" data-direccion="{% if orden == 'estado' and direccion == 'asc' %}desc{% else %}asc{% endif %}">
+                            Estado <span aria-hidden="true">{% if orden == 'estado' %}{% if direccion == 'asc' %}↑{% else %}↓{% endif %}{% else %}↕{% endif %}</span>
+                        </a>
+                    </th>
+
+
+                    <th aria-sort="{% if orden == 'fecha_ingreso' %}{% if direccion == 'asc' %}ascending{% else %}descending{% endif %}{% else %}none{% endif %}">
+                        <a class="socios-sort-link" href="?{{ enlaces_orden.fecha_ingreso }}" data-orden="fecha_ingreso" data-direccion="{% if orden == 'fecha_ingreso' and direccion == 'asc' %}desc{% else %}asc{% endif %}">
+                            Ingreso <span aria-hidden="true">{% if orden == 'fecha_ingreso' %}{% if direccion == 'asc' %}↑{% else %}↓{% endif %}{% else %}↕{% endif %}</span>
+                        </a>
+                    </th>
+                    <th>Acciones</th>
+                </tr>
+
+            </thead>
+
+
+            <tbody>
+
+                {% for socio in socios %}
+
+                    <tr>
+
+                        <td>
+                            {{ socio.dni }}
+                        </td>
+
+
+                        <td class="socio-name">
+                            <a href="{% url 'socios:detalle' socio.pk %}" class="socio-detail-link">
+                                {{ socio.apellido }}, {{ socio.nombre }}
+                            </a>
+                            {% if socio.estado_apto_fisico.nombre|lower == "pendiente" %}
+                                <span class="socio-apto-warning" role="img" aria-label="Apto físico pendiente" title="Apto físico pendiente"><i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i></span>
+                            {% elif socio.estado_apto_fisico.nombre|lower == "vencido" %}
+                                <span class="socio-apto-warning socio-apto-expired" role="img" aria-label="Apto físico vencido" title="Apto físico vencido"><i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i></span>
+                            {% endif %}
+                        </td>
+                        <td class="socio-contact">
+                            <span>{{ socio.email|default:"-" }}</span>
+                            <span class="socio-contact-phone">{{ socio.telefono_formateado|default:"-" }}</span>
+                        </td>
+
+
+                        <td>
+
+                            <span
+                                class="
+                                    status-badge
+
+                                    {% if socio.estado_socio.nombre|lower == 'activo' %}
+                                        status-active
+
+                                    {% elif socio.estado_socio.nombre|lower == 'pendiente' %}
+                                        status-warning
+
+                                    {% elif socio.estado_socio.nombre|lower == 'suspendido' %}
+                                        status-suspended
+
+                                    {% else %}
+                                        status-inactive
+                                    {% endif %}
+                                "
+                            >
+                                <i class="fa-solid fa-circle" aria-hidden="true"></i>
+
+                                {{ socio.estado_socio.nombre|default:"Sin información" }}
+                            </span>
+
+                        </td>
+
+
+
+
+                        <td>
+                            {{ socio.fecha_ingreso|date:"d/m/Y" }}
+                        </td>
+
+
+                        <td>
+
+                            <div class="table-actions">
+
+                                <a
+                                    href="{% url 'socios:detalle' socio.pk %}"
+                                    class="action-btn"
+                                    title="Ver socio"
+                                >
+                                    <i class="fa-solid fa-eye"></i>
+                                </a>
+
+
+                                {% if perms.socios.change_socio %}
+
+                                    <a
+                                        href="{% url 'socios:editar' socio.pk %}?next=listado"
+                                        class="action-btn"
+                                        title="Editar socio"
+                                    >
+                                        <i class="fa-solid fa-pen"></i>
+                                    </a>
+
+                                {% endif %}
+
+                            </div>
+
+                        </td>
+
+                    </tr>
+
+                {% empty %}
+
+                    <tr>
+
+                        <td
+                            colspan="6"
+                            style="text-align: center;"
+                        >
+                            No se encontraron socios.
+                        </td>
+
+                    </tr>
+
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+
+
+        <!-- =========================
+             PAGINACIÓN
+        ========================== -->
+
+
+
+        <div class="pagination">
+
+                {% if socios.has_previous %}
+
+                    <a
+                        href="?page={{ socios.previous_page_number }}{% if parametros_paginacion %}&amp;{{ parametros_paginacion }}{% endif %}"
+                        title="Página anterior"
+                    >
+                        <i class="fa-solid fa-chevron-left"></i>
+                    </a>
+
+                {% endif %}
+
+
+                <span>
+                    Página {{ socios.number }}
+                    de {{ socios.paginator.num_pages }}
+                </span>
+
+
+                {% if socios.has_next %}
+
+                    <a
+                        href="?page={{ socios.next_page_number }}{% if parametros_paginacion %}&amp;{{ parametros_paginacion }}{% endif %}"
+                        title="Página siguiente"
+                    >
+                        <i class="fa-solid fa-chevron-right"></i>
+                    </a>
+
+                {% endif %}
+
+            </div>
+    </div>

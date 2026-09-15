@@ -1,0 +1,240 @@
+{% extends 'base_gestion.html' %}
+
+{% block title %}
+{% if object %}Editar Profesor{% else %}Nuevo Profesor{% endif %} | Malvinas GYM
+{% endblock %}
+{% block breadcrumb %}Profesores{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+    <div class="page-title">
+        <h1>{% if object %}Editar Profesor{% else %}Nuevo Profesor{% endif %}</h1>
+        <p>Formulario de registro y actualización de datos</p>
+    </div>
+
+    <a href="{% url 'actividades:profesor_list' %}" class="btn btn-outline btn-sm">
+        <i class="fa-solid fa-arrow-left"></i>
+        Volver al listado
+    </a>
+</div>
+
+<div class="form-blocks-container">
+
+    <!-- BLOQUE CABECERA DE EDICIÓN -->
+{% if object %}
+<div class="form-card-block" style="padding: 24px 32px; background: #ffffff; border-radius: 16px; border: 1px solid #e2e8f0; margin-bottom: 24px;">
+    <div style="display: flex; align-items: center; justify-content: space-between; gap: 16px;">
+        
+        <!-- LADO IZQUIERDO: Flecha + Avatar + Textos -->
+        <div style="display: flex; align-items: center; gap: 20px;">
+            <a href="{% url 'actividades:profesor_list' %}" style="color: #64748b; font-size: 1.1rem; text-decoration: none;" title="Volver">
+                <i class="fa-solid fa-arrow-left"></i>
+            </a>
+
+            <!-- Círculo del Avatar -->
+            <div style="width: 52px; height: 52px; border-radius: 50%; background-color: #fef3c7; color: #1e293b; display: flex; align-items: center; justify-content: center; font-size: 1.3rem; flex-shrink: 0;">
+                <i class="fa-solid fa-user"></i>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 2px;">
+                <span style="font-size: 0.72rem; font-weight: 700; color: #475569; letter-spacing: 0.5px; text-transform: uppercase;">
+                    FICHA DE PROFESOR
+                </span>
+
+                <h2 style="margin: 0; font-size: 1.6rem; font-weight: 800; color: #0f172a; text-transform: uppercase; line-height: 1.2;">
+                    {{ object.nombre }} {{ object.apellido }}
+                </h2>
+
+                <div style="margin-top: 4px;">
+                    {% if object.estado_profesor.nombre|lower == 'activo' %}
+                        <span style="display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px; background-color: #f1f5f9; color: #475569; border-radius: 20px; font-size: 0.78rem; font-weight: 600;">
+                            <i class="fa-solid fa-circle" style="font-size: 0.45rem; color: #10b981;"></i> Activo
+                        </span>
+                    {% else %}
+                        <span style="display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px; background-color: #f1f5f9; color: #475569; border-radius: 20px; font-size: 0.78rem; font-weight: 600;">
+                            <i class="fa-solid fa-circle" style="font-size: 0.45rem; color: #64748b;"></i> Inactivo
+                        </span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- LADO DERECHO: Botones (Editar + Estado + Eliminar) -->
+        <div style="display: flex; align-items: center; gap: 10px;">
+            
+            <!-- Botón Editar con Lápiz -->
+            <a href="{% url 'actividades:profesor_update' object.pk %}" style="display: inline-flex; align-items: center; gap: 8px; padding: 8px 16px; background: #ffffff; color: #0f172a; border: 1px solid #cbd5e1; border-radius: 10px; font-size: 0.88rem; font-weight: 600; text-decoration: none;">
+                <i class="fa-solid fa-pen" style="font-size: 0.8rem;"></i>
+                Editar profesor
+            </a>
+
+            {% if object.estado_profesor.nombre|lower == 'activo' %}
+                <a href="{% url 'actividades:profesor_cambiar_estado' object.pk %}" style="display: inline-flex; align-items: center; gap: 8px; padding: 8px 16px; background: #ffffff; color: #dc2626; border: 1px solid #fecaca; border-radius: 10px; font-size: 0.88rem; font-weight: 600; text-decoration: none;">
+                    <i class="fa-solid fa-user-slash"></i>
+                    Dar de baja
+                </a>
+            {% else %}
+                <a href="{% url 'actividades:profesor_cambiar_estado' object.pk %}" style="display: inline-flex; align-items: center; gap: 8px; padding: 8px 16px; background: #f0fdf4; color: #15803d; border: 1px solid #bbf7d0; border-radius: 10px; font-size: 0.88rem; font-weight: 600; text-decoration: none;">
+                    <i class="fa-solid fa-rotate-left"></i>
+                    Reactivar
+                </a>
+            {% endif %}
+
+            <a href="{% url 'actividades:profesor_delete' object.pk %}" style="display: inline-flex; align-items: center; gap: 8px; padding: 8px 16px; background: #fef2f2; color: #991b1b; border: 1px solid #fecaca; border-radius: 10px; font-size: 0.88rem; font-weight: 600; text-decoration: none;">
+                <i class="fa-solid fa-trash"></i>
+                Eliminar definitivamente
+            </a>
+        </div>
+
+    </div>
+</div>
+{% endif %}
+
+    <form method="post">
+        {% csrf_token %}
+
+        <div class="form-card-block">
+            <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 24px; padding-bottom: 16px; border-bottom: 1px solid #f1f5f9;">
+                <div style="width: 46px; height: 46px; border-radius: 12px; background-color: #fef3c7; color: #1e293b; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; flex-shrink: 0;">
+                    <i class="fa-solid fa-user"></i>
+                </div>
+                <div>
+                    <h3 style="margin: 0; font-size: 1.2rem; font-weight: 800; color: #0f172a; text-transform: uppercase;">DATOS PERSONALES</h3>
+                    <p style="margin: 2px 0 0 0; font-size: 0.875rem; color: #64748b;">Información principal e identificación del profesor.</p>
+                </div>
+            </div>
+
+            <div class="form-grid-2">
+                <div class="field-group">
+                    <label>DNI <span style="color: #ef4444;">*</span></label>
+                    {{ form.dni }}
+                </div>
+
+                <div class="field-group">
+                    <label>Nombre <span style="color: #ef4444;">*</span></label>
+                    {{ form.nombre }}
+                </div>
+
+                <div class="field-group">
+                    <label>Apellido <span style="color: #ef4444;">*</span></label>
+                    {{ form.apellido }}
+                </div>
+
+                <!-- Fecha de nacimiento -->
+                <div class="field-group">
+                    <label for="id_fecha_nacimiento">Fecha de nacimiento</label>
+                    <div style="display: flex; gap: 8px;">
+                        <div style="flex: 1;">
+                            {{ form.fecha_nacimiento }}
+                        </div>
+                        <button type="button"
+                            onclick="const input = document.getElementById('id_fecha_nacimiento'); if (input.showPicker) { input.showPicker(); } else { input.focus(); input.click(); }"
+                                style="height: 42px; padding: 0 16px; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 8px; cursor: pointer;">
+                            <i class="fa-regular fa-calendar"></i>
+                        </button>
+                    </div>
+                    {% if form.fecha_nacimiento.errors %}
+                        <span style="color: #ef4444; font-size: 0.8rem;">
+                            {{ form.fecha_nacimiento.errors.0 }}
+                        </span>
+                    {% endif %}
+                </div>
+
+                <!-- Fecha de ingreso -->
+                <div class="field-group">
+                    <label for="id_fecha_ingreso">Fecha de ingreso <span style="color: #ef4444;">*</span></label>
+                    <div style="display: flex; gap: 8px;">
+                        <div style="flex: 1;">
+                            {% if form.fecha_ingreso %}
+                                {{ form.fecha_ingreso }}
+                            {% else %}
+                                <input type="date" name="fecha_ingreso" id="id_fecha_ingreso" class="form-control" style="height: 42px; border: 1px solid #cbd5e1; border-radius: 8px; padding: 8px 14px; width: 100%;">
+                            {% endif %}
+                        </div>
+                        <button type="button" onclick="document.getElementById('id_fecha_ingreso').value = new Date().toISOString().split('T')[0]" style="height: 42px; padding: 0 16px; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 8px; font-weight: 700; font-size: 0.8rem; cursor: pointer;">
+                            HOY
+                        </button>
+                    </div>
+                    {% if form.fecha_ingreso.errors %}
+                        <span style="color: #ef4444; font-size: 0.8rem;">{{ form.fecha_ingreso.errors.0 }}</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="form-card-block">
+            <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 24px; padding-bottom: 16px; border-bottom: 1px solid #f1f5f9;">
+                <div style="width: 46px; height: 46px; border-radius: 12px; background-color: #fef3c7; color: #1e293b; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; flex-shrink: 0;">
+                    <i class="fa-solid fa-address-book"></i>
+                </div>
+                <div>
+                    <h3 style="margin: 0; font-size: 1.2rem; font-weight: 800; color: #0f172a; text-transform: uppercase;">CONTACTO Y DOMICILIO</h3>
+                    <p style="margin: 2px 0 0 0; font-size: 0.875rem; color: #64748b;">Datos de comunicación y ubicación del profesor.</p>
+                </div>
+            </div>
+
+            <div class="form-grid-2">
+                <div class="field-group">
+                    <label>Teléfono Principal <span style="color: #ef4444;">*</span></label>
+                    {{ form.telefono }}
+                </div>
+
+                <div class="field-group">
+                    <label>Teléfono Secundario</label>
+                    {{ form.telefono_2 }}
+                </div>
+
+                <div class="field-group">
+                    <label>Email</label>
+                    {{ form.email }}
+                </div>
+
+                <div class="field-group">
+                    <label>Domicilio</label>
+                    {{ form.domicilio }}
+                </div>
+            </div>
+        </div>
+
+        <div class="form-card-block">
+            <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 24px; padding-bottom: 16px; border-bottom: 1px solid #f1f5f9;">
+                <div style="width: 46px; height: 46px; border-radius: 12px; background-color: #fef3c7; color: #1e293b; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; flex-shrink: 0;">
+                    <i class="fa-solid fa-sliders"></i>
+                </div>
+                <div>
+                    <h3 style="margin: 0; font-size: 1.2rem; font-weight: 800; color: #0f172a; text-transform: uppercase;">ASIGNACIÓN DE ESTADO Y USUARIO</h3>
+                    <p style="margin: 2px 0 0 0; font-size: 0.875rem; color: #64748b;">Configuración de estado en el sistema y usuario asociado.</p>
+                </div>
+            </div>
+
+            <div class="form-grid-2">
+                <div class="field-group">
+                    <label>Estado del Profesor <span style="color: #ef4444;">*</span></label>
+                    {{ form.estado_profesor }}
+                </div>
+
+                <div class="field-group">
+                    <label>Usuario del Sistema</label>
+                    <div class="detail-value">
+                        Se crea automáticamente con el DNI del profesor.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-footer-actions">
+            <a href="{% url 'actividades:profesor_list' %}" class="btn btn-outline btn-sm">
+                Cancelar
+            </a>
+            <button type="submit" class="btn btn-primary btn-sm">
+                <i class="fa-solid fa-floppy-disk"></i>
+                Guardar Profesor
+            </button>
+        </div>
+
+    </form>
+
+</div>
+
+{% endblock %}

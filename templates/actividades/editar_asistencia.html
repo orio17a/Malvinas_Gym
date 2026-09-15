@@ -1,0 +1,177 @@
+{% extends "base_gestion.html" %}
+
+{% block title %}
+Editar asistencia | Malvinas GYM
+{% endblock %}
+
+{% block breadcrumb %}
+Asistencias
+{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+
+<div class="page-title">
+    <h1>Editar asistencia</h1>
+    <p>Modificar el estado de asistencia del socio</p>
+</div>
+
+<a href="{% url 'actividades:asistencia_lista' %}" class="btn btn-outline btn-sm">
+    <i class="fa-solid fa-arrow-left"></i>
+    Volver al listado
+</a>
+
+</div>
+
+<!-- Envoltorio general centrado -->
+
+<div class="form-blocks-container">
+
+
+<form method="post" class="socio-form">
+
+    {% csrf_token %}
+
+
+    <!-- BLOQUE 1 -->
+    <div class="form-card-block">
+
+        <div class="form-step-title">
+            <span>Paso 1</span>
+
+            <h3>
+                <i class="fa-solid fa-user me-2"></i>
+                Información del Socio
+            </h3>
+        </div>
+
+
+        <div class="field-group">
+
+            <label>Socio</label>
+
+            <div class="detail-value">
+                {{ asistencia.socio }}
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- BLOQUE 2 -->
+    <div class="form-card-block">
+
+        <div class="form-step-title">
+            <span>Paso 2</span>
+
+            <h3>
+                <i class="fa-solid fa-calendar-days me-2"></i>
+                Información de la Clase
+            </h3>
+        </div>
+
+
+        <div class="field-group">
+
+            <label>Horario</label>
+
+            <div class="detail-value">
+                {{ asistencia.horario }}
+            </div>
+
+        </div>
+
+
+        <div class="field-group">
+
+            <label>Profesor</label>
+
+            <div class="detail-value">
+                {{ asistencia.profesor }}
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- BLOQUE 3 -->
+    <div class="form-card-block">
+
+        <div class="form-step-title">
+
+            <span>Paso 3</span>
+
+            <h3>
+                <i class="fa-solid fa-clipboard-check me-2"></i>
+                Estado de la Asistencia
+            </h3>
+
+        </div>
+
+
+        {% if form.non_field_errors %}
+            <div class="form-error">
+                {{ form.non_field_errors }}
+            </div>
+        {% endif %}
+
+
+        {% for field in form %}
+
+            <div class="field-group">
+
+                <label for="{{ field.id_for_label }}">
+                    {{ field.label }}
+                </label>
+
+                {{ field }}
+
+                {% if field.errors %}
+                    <small class="form-error">
+                        {{ field.errors|striptags }}
+                    </small>
+                {% endif %}
+
+            </div>
+
+        {% endfor %}
+
+
+        <div class="form-help">
+
+            <i class="fa-solid fa-circle-info me-1"></i>
+
+            El socio, el horario y el profesor de un registro de
+            asistencia no se pueden cambiar acá. Estos datos surgen
+            de la inscripción real. Si el registro corresponde a otro
+            socio u horario, eliminá el registro y volvé a tomar la
+            asistencia desde el horario correcto.
+
+        </div>
+
+    </div>
+
+
+    <!-- ACCIONES -->
+    <div class="form-footer-actions">
+
+        <button type="submit" class="btn btn-primary btn-sm">
+            <i class="fa-solid fa-floppy-disk me-1"></i>
+            Guardar asistencia
+        </button>
+
+        <a href="{% url 'actividades:asistencia_lista' %}" class="btn btn-outline btn-sm">
+            <i class="fa-solid fa-xmark me-1"></i>
+            Cancelar
+        </a>
+
+    </div>
+
+
+</form>
+</div>
+
+{% endblock %}

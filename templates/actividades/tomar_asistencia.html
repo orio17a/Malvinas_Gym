@@ -1,0 +1,280 @@
+{% extends "base_gestion.html" %}
+
+{% block title %}
+Tomar asistencia | Malvinas GYM
+{% endblock %}
+
+{% block breadcrumb %}
+Asistencias
+{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+
+<div class="page-title">
+    <h1>Tomar asistencia</h1>
+    <p>
+        {{ horario.actividad }} —
+        {{ horario.dia }},
+        {{ horario.hora_inicio|time:"H:i" }}
+        a
+        {{ horario.hora_fin|time:"H:i" }}
+        — Prof. {{ horario.profesor }}
+    </p>
+</div>
+
+<a href="{% url 'actividades:horario_lista' %}" class="btn btn-outline btn-sm">
+    <i class="fa-solid fa-arrow-left"></i>
+    Volver al listado
+</a>
+
+</div>
+
+<!-- Envoltorio general centrado -->
+
+<div class="form-blocks-container">
+
+<form method="post" class="asistencia-form">
+
+    {% csrf_token %}
+
+
+    <!-- BLOQUE 1 -->
+    <div class="form-card-block">
+
+        <div class="form-step-title">
+            <span>Paso 1</span>
+
+            <h3>
+                <i class="fa-solid fa-calendar-days me-2"></i>
+                Información de la Clase
+            </h3>
+        </div>
+
+
+        <div class="field-group">
+
+            <label>Actividad</label>
+
+            <div class="detail-value">
+                {{ horario.actividad }}
+            </div>
+
+        </div>
+
+
+        <div class="field-group">
+
+            <label>Día</label>
+
+            <div class="detail-value">
+                {{ horario.dia }}
+            </div>
+
+        </div>
+
+
+        <div class="field-group">
+
+            <label>Horario</label>
+
+            <div class="detail-value">
+                {{ horario.hora_inicio|time:"H:i" }}
+                a
+                {{ horario.hora_fin|time:"H:i" }}
+            </div>
+
+        </div>
+
+
+        <div class="field-group">
+
+            <label>Profesor</label>
+
+            <div class="detail-value">
+                {{ horario.profesor }}
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- BLOQUE 2 -->
+    <div class="form-card-block">
+
+        <div class="form-step-title">
+
+            <span>Paso 2</span>
+
+            <h3>
+                <i class="fa-solid fa-calendar-check me-2"></i>
+                Fecha de la Clase
+            </h3>
+
+        </div>
+
+
+        <div class="field-group">
+
+            <label for="id_fecha">
+                Fecha de la clase
+            </label>
+
+            <input
+                type="date"
+                id="id_fecha"
+                name="fecha"
+                value="{{ fecha|date:'Y-m-d' }}"
+                onchange="window.location.search = '?fecha=' + this.value"
+            >
+
+        </div>
+
+    </div>
+
+
+    <!-- BLOQUE 3 -->
+    <div class="form-card-block">
+
+        <div class="form-step-title">
+
+            <span>Paso 3</span>
+
+            <h3>
+                <i class="fa-solid fa-users me-2"></i>
+                Asistencia de Socios
+            </h3>
+
+        </div>
+
+
+        {% if filas %}
+
+            <div class="field-group">
+
+                <label>
+                    Lista de socios
+                </label>
+
+                <div class="detail-value">
+
+                    <table class="gestion-table asistencia-table">
+
+                        <thead>
+
+                            <tr>
+                                <th>Socio</th>
+                                <th>DNI</th>
+                                <th>Asistencia</th>
+                            </tr>
+
+                        </thead>
+
+
+                        <tbody>
+
+                            {% for fila in filas %}
+
+                                <tr>
+
+                                    <td>
+                                        {{ fila.socio }}
+                                    </td>
+
+                                    <td>
+                                        {{ fila.socio.dni }}
+                                    </td>
+
+                                    <td>
+
+                                        <div class="toggle-asistencia">
+
+                                            <input
+                                                type="radio"
+                                                id="presente_{{ fila.socio.pk }}"
+                                                name="estado_{{ fila.socio.pk }}"
+                                                value="presente"
+                                                {% if fila.presente %}checked{% endif %}
+                                            >
+
+                                            <label
+                                                for="presente_{{ fila.socio.pk }}"
+                                                class="toggle-btn toggle-presente"
+                                            >
+                                                <i class="fa-solid fa-check"></i>
+                                                Presente
+                                            </label>
+
+
+                                            <input
+                                                type="radio"
+                                                id="ausente_{{ fila.socio.pk }}"
+                                                name="estado_{{ fila.socio.pk }}"
+                                                value="ausente"
+                                                {% if not fila.presente %}checked{% endif %}
+                                            >
+
+                                            <label
+                                                for="ausente_{{ fila.socio.pk }}"
+                                                class="toggle-btn toggle-ausente"
+                                            >
+                                                <i class="fa-solid fa-xmark"></i>
+                                                Ausente
+                                            </label>
+
+                                        </div>
+
+                                    </td>
+
+                                </tr>
+
+                            {% endfor %}
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </div>
+
+
+            <!-- ACCIONES -->
+
+            <div class="form-footer-actions">
+
+                <button
+                    type="submit"
+                    class="btn btn-primary btn-sm"
+                >
+                    <i class="fa-solid fa-floppy-disk me-1"></i>
+                    Guardar asistencia
+                </button>
+
+            </div>
+
+
+        {% else %}
+
+            <div class="field-group">
+
+                <label>Socios inscriptos</label>
+
+                <div class="detail-value">
+                    Todavía no hay socios inscriptos en este horario.
+                    Registrá inscripciones antes de tomar asistencia.
+                </div>
+
+            </div>
+
+        {% endif %}
+
+    </div>
+
+</form>
+
+</div>
+
+{% endblock %}

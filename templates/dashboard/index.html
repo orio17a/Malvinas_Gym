@@ -1,0 +1,94 @@
+{% extends "base_gestion.html" %}
+
+{% block title %}Dashboard | Malvinas GYM{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+    <div class="page-title">
+        <h1>Hola, {{ request.user.get_short_name|default:request.user.username }}</h1>
+        <p>Este es el resumen general de Malvinas Gym.</p>
+    </div>
+</div>
+
+<div class="stats-grid">
+
+    <div class="stat-card">
+        <div class="stat-icon stat-icon-total">
+            <i class="fa-solid fa-users"></i>
+        </div>
+        <div class="stat-content">
+            <span class="stat-label">Socios totales</span>
+            <strong class="stat-number">{{ total_socios }}</strong>
+        </div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-icon stat-icon-active">
+            <i class="fa-solid fa-user-check"></i>
+        </div>
+        <div class="stat-content">
+            <span class="stat-label">Socios activos</span>
+            <strong class="stat-number">{{ socios_activos }}</strong>
+        </div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-icon stat-icon-total">
+            <i class="fa-solid fa-dumbbell"></i>
+        </div>
+        <div class="stat-content">
+            <span class="stat-label">Actividades totales</span>
+            <strong class="stat-number">{{ total_actividades }}</strong>
+        </div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-icon stat-icon-active">
+            <i class="fa-solid fa-circle-check"></i>
+        </div>
+        <div class="stat-content">
+            <span class="stat-label">Actividades activas</span>
+            <strong class="stat-number">{{ actividades_activas }}</strong>
+        </div>
+    </div>
+
+</div>
+
+<div class="gestion-card">
+    <h2 class="dashboard-section-title">Accesos rápidos</h2>
+
+    <div class="dashboard-quicklinks">
+
+        {% if perms.socios.view_socio %}
+            <a href="{% url 'socios:lista' %}" class="dashboard-quicklink">
+                <i class="fa-solid fa-users"></i>
+                <span>Gestionar socios</span>
+            </a>
+        {% endif %}
+
+        {% if perms.actividades.view_actividad %}
+            <a href="{% url 'actividades:actividad_lista' %}" class="dashboard-quicklink">
+                <i class="fa-solid fa-dumbbell"></i>
+                <span>Gestionar actividades</span>
+            </a>
+        {% endif %}
+
+        {% if perms.actividades.view_inscripcion %}
+            <a href="{% url 'actividades:inscripcion_lista' %}" class="dashboard-quicklink">
+                <i class="fa-solid fa-clipboard-list"></i>
+                <span>Ver inscripciones</span>
+            </a>
+        {% endif %}
+
+        {% if perms.actividades.view_asistencia %}
+            <a href="{% url 'actividades:asistencia_lista' %}" class="dashboard-quicklink">
+                <i class="fa-solid fa-check"></i>
+                <span>Tomar asistencia</span>
+            </a>
+        {% endif %}
+
+    </div>
+</div>
+
+{% endblock %}

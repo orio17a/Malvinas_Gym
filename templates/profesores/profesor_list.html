@@ -1,0 +1,220 @@
+{% extends "base_gestion.html" %}
+{% load static %}
+
+{% block title %}
+Profesores | Malvinas GYM
+{% endblock %}
+{% block breadcrumb %}Profesores{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+    <div class="page-title">
+        <h1>Profesores</h1>
+        <p>Gestión y control del personal del gimnasio</p>
+    </div>
+
+    <a href="{% url 'actividades:profesor_create' %}" class="btn btn-primary">
+        <i class="fa-solid fa-plus"></i>
+        Nuevo profesor
+    </a>
+</div>
+
+<!-- CONTADORES -->
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-icon stat-icon-total">
+            <i class="fa-solid fa-users"></i>
+        </div>
+        <div class="stat-content">
+            <span class="stat-label">Profesores totales</span>
+            <strong class="stat-number">{{ profesores_totales }}</strong>
+        </div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-icon stat-icon-active">
+            <i class="fa-solid fa-user-check"></i>
+        </div>
+        <div class="stat-content">
+            <span class="stat-label">Profesores activos</span>
+            <strong class="stat-number">{{ profesores_activos }}</strong>
+        </div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-icon stat-icon-inactive">
+            <i class="fa-solid fa-user-xmark"></i>
+        </div>
+        <div class="stat-content">
+            <span class="stat-label">Profesores inactivos</span>
+            <strong class="stat-number">{{ profesores_inactivos }}</strong>
+        </div>
+    </div>
+</div>
+
+<!-- TARJETA UNIFICADA (BUSCADOR Y TABLA DENTRO) -->
+<div class="gestion-card">
+    <!-- FILTROS -->
+    <div class="list-toolbar">
+
+        <form method="GET"
+            action="{% url 'actividades:profesor_list' %}"
+            class="search-form"
+            id="profesoresFilterForm">
+
+            <!-- BUSCADOR -->
+            <div class="profesor-autocomplete-wrapper">
+
+                <div class="search-input-wrapper">
+                <i class="fa-solid fa-magnifying-glass"></i>
+
+                <input
+                    type="text"
+                    name="buscar"
+                    id="buscarProfesor"
+                    value="{{ buscar }}"
+                    placeholder="DNI, nombre o apellido..."
+                    autocomplete="off"
+                >
+                </div>
+
+                <div
+                    id="sugerenciasProfesor"
+                    class="profesor-autocomplete-results"
+                ></div>
+            </div>
+
+            <!-- FILTRO ESTADO -->
+            <div class="estado-filter-wrapper">
+                <select
+                    name="estado"
+                    class="profesores-state-filter"
+                    onchange="this.form.submit()"
+                >
+                    <option value="">
+                        Todos los estados
+                    </option>
+
+                    {% for estado in estados %}
+                        <option
+                            value="{{ estado.pk }}"
+                            {% if estado_seleccionado == estado.pk|stringformat:"s" %}
+                                selected
+                            {% endif %}
+                        >
+                            {{ estado.nombre }}
+                        </option>
+                    {% endfor %}
+
+                </select>
+            </div>
+            
+            <!-- INFORMACIÓN DE FILTROS -->
+            {% if buscar or estado_seleccionado %}
+                <a
+                    href="{% url 'actividades:profesor_list' %}"
+                    class="btn btn-sm"
+                >
+                    <i class="fa-solid fa-xmark"></i>
+                    Limpiar
+                </a>
+            {% endif %}
+        </form>
+    </div>
+
+    <!-- TABLA -->
+    <div class="table-wrapper">
+        <table class="gestion-table">
+            <thead>
+                <tr>
+                    <th>Profesor</th>
+                    <th>DNI</th>
+                    <th>Teléfono</th>
+                    <th>Email</th>
+                    <th>Estado</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for profesor in profesores %}
+                <tr>
+                    <td class="socio-name">
+                        {{ profesor.apellido }}, {{ profesor.nombre }}
+                    </td>
+
+                    <td>{{ profesor.dni }}</td>
+
+                    <td>{{ profesor.telefono|default:"-" }}</td>
+
+                    <td>{{ profesor.email|default:"-" }}</td>
+
+                    <td>
+                        {% if profesor.estado_profesor.nombre|lower == "activo" %}
+                            <span class="status-badge status-active">
+                                <i class="fa-solid fa-circle"></i>
+                                Activo
+                            </span>
+                        {% elif profesor.estado_profesor.nombre|lower == "suspendido" %}
+                            <span class="status-badge status-suspended">
+                                <i class="fa-solid fa-circle"></i>
+                                Suspendido
+                            </span>
+                        {% else %}
+                            <span class="status-badge status-inactive">
+                                <i class="fa-solid fa-circle"></i>
+                                {{ profesor.estado_profesor.nombre|default:"Inactivo" }}
+                            </span>
+                        {% endif %}
+                    </td>
+
+                    <td>
+                        <div class="table-actions">
+                            <a
+                                href="{% url 'actividades:profesor_detalle' profesor.pk %}"
+                                class="action-btn"
+                                title="Ver detalle"
+                            >
+                                <i class="fa-solid fa-eye"></i>
+                            </a>
+
+                            <a
+                                href="{% url 'actividades:profesor_update' profesor.pk %}"
+                                class="action-btn"
+                                title="Editar profesor"
+                            >
+                                <i class="fa-solid fa-pen"></i>
+                            </a>
+
+                            <a
+                                href="{% url 'actividades:profesor_cambiar_estado' profesor.pk %}"
+                                class="action-btn"
+                                title="{% if profesor.estado_profesor.nombre|lower == 'activo' %}Dar de baja{% else %}Dar de alta{% endif %}"
+                            >
+                                {% if profesor.estado_profesor.nombre|lower == 'activo' %}
+                                    <i class="fa-solid fa-user-minus" style="color: #dc3545;"></i>
+                                {% else %}
+                                    <i class="fa-solid fa-user-plus" style="color: #198754;"></i>
+                                {% endif %}
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" class="text-center" style="padding: 32px; color: var(--ink-soft);">
+                        No hay profesores registrados en la base de datos.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+</div>
+
+{{ profesores_autocomplete|json_script:"profesores-autocomplete-data" }}
+<script src="{% static 'core/js/profesor_list.js' %}"></script>
+
+{% endblock %}

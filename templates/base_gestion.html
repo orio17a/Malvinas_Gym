@@ -1,0 +1,520 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>
+        {% block title %}
+        Gestión | Malvinas GYM
+        {% endblock %}
+    </title>
+
+    <!-- CSS general -->
+    <link
+        rel="stylesheet"
+        href="{% static 'core/css/style.css' %}?v=20260915b"
+    >
+
+    <!-- CSS del panel de gestión -->
+    <link
+        rel="stylesheet"
+        href="{% static 'core/css/gestion.css' %}?v=20260915b"
+    >
+
+    <!-- Font Awesome -->
+    <link
+        rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+    >
+</head>
+
+
+<body class="gestion-body">
+
+    <!-- Aplica el estado colapsado y el tema (si estaban guardados) antes
+         de pintar el layout, para evitar el parpadeo sidebar/tema al cargar. -->
+    <script>
+        if (localStorage.getItem("malvinasGymSidebarCollapsed") === "true") {
+            document.body.classList.add("sidebar-collapsed");
+        }
+        if (localStorage.getItem("malvinasGymTheme") === "dark") {
+            document.body.setAttribute("data-theme", "dark");
+        }
+    </script>
+
+    <div class="gestion-layout">
+
+        <!-- =========================
+             SIDEBAR
+        ========================== -->
+
+        <aside class="gestion-sidebar">
+
+            <!-- LOGO -->
+            <div class="sidebar-logo">
+
+                <a href="/">
+
+                    <img
+                        src="{% static 'core/img/logo.png' %}"
+                        alt="Malvinas GYM"
+                    >
+
+                </a>
+
+            </div>
+
+
+            <nav class="sidebar-nav">
+
+                <!-- =====================
+                     PORTAL PÚBLICO
+                ====================== -->
+
+                <a href="/" title="Inicio">
+
+                    <i class="fa-solid fa-house"></i>
+
+                    <span>
+                        Inicio
+                    </span>
+
+                </a>
+
+
+                <!-- =====================
+                     MÓDULOS
+                ====================== -->
+
+                <div class="sidebar-section-title">
+                    Módulos
+                </div>
+
+
+                <!-- DASHBOARD -->
+                <a href="{% url 'dashboard:index' %}" title="Dashboard">
+
+                    <i class="fa-solid fa-chart-line"></i>
+
+                    <span>
+                        Dashboard
+                    </span>
+
+                </a>
+
+
+                <!-- SOCIOS -->
+                {% if perms.socios.view_socio %}
+
+                    <a href="{% url 'socios:lista' %}" title="Socios">
+
+                        <i class="fa-solid fa-users"></i>
+
+                        <span>
+                            Socios
+                        </span>
+
+                    </a>
+
+                {% endif %}
+
+
+                <!-- MEMBRESÍAS -->
+                <a href="#" title="Membresías">
+
+                    <i class="fa-solid fa-id-card"></i>
+
+                    <span>
+                        Membresías
+                    </span>
+
+                </a>
+
+
+                <!-- CUOTAS -->
+                <a href="#" title="Cuotas">
+
+                    <i class="fa-solid fa-file-invoice-dollar"></i>
+
+                    <span>
+                        Cuotas
+                    </span>
+
+                </a>
+
+
+                <!-- ACTIVIDADES -->
+                {% if perms.actividades.view_actividad %}
+                    <a href="{% url 'actividades:actividad_lista' %}" title="Actividades">
+
+                        <i class="fa-solid fa-dumbbell"></i>
+
+                        <span>
+                            Actividades
+                        </span>
+
+                    </a>
+                {% endif %}
+
+
+                <!-- HORARIOS -->
+                {% if perms.actividades.view_horario %}
+                    <a href="{% url 'actividades:horario_lista' %}" title="Horarios">
+
+                        <i class="fa-regular fa-clock"></i>
+
+                        <span>
+                            Horarios
+                        </span>
+
+                    </a>
+                {% endif %}
+
+
+                <!-- INSCRIPCIONES -->
+                {% if perms.actividades.view_inscripcion %}
+                    <a href="{% url 'actividades:inscripcion_lista' %}" title="Inscripciones">
+
+                        <i class="fa-solid fa-clipboard-list"></i>
+
+                        <span>
+                            Inscripciones
+                        </span>
+
+                    </a>
+                {% endif %}
+
+
+                <!-- ASISTENCIAS -->
+                {% if perms.actividades.view_asistencia %}
+                    <a href="{% url 'actividades:asistencia_lista' %}" title="Asistencias">
+
+                        <i class="fa-solid fa-check"></i>
+
+                        <span>
+                            Asistencias
+                        </span>
+
+                    </a>
+                {% endif %}
+
+
+                <!-- PROFESORES -->
+                <a href="{% url 'actividades:profesor_list' %}">
+
+                    <i class="fa-solid fa-user-tie"></i>
+
+                    <span>
+                        Profesores
+                    </span>
+
+                </a>
+
+
+                <!-- =====================
+                     ADMINISTRACIÓN
+                ====================== -->
+
+                <div class="sidebar-section-title admin-section">
+                    Administración
+                </div>
+
+                <a href="#" title="Caja">
+                    <i class="fa-solid fa-cash-register"></i>
+                    <span>Caja</span>
+                </a>
+
+                <a href="#" title="Notificaciones">
+                    <i class="fa-solid fa-bell"></i>
+                    <span>Notificaciones</span>
+                </a>
+
+                <a href="#" title="Usuarios">
+                    <i class="fa-solid fa-users-gear"></i>
+                    <span>Usuarios</span>
+                </a>
+
+
+                <!-- =====================
+                     SESIÓN
+                ====================== -->
+
+                <div class="sidebar-section-title">
+                    Sesión
+                </div>
+
+                <form method="post" action="{% url 'logout' %}" class="sidebar-logout-form">
+                    {% csrf_token %}
+                    <button type="submit" class="sidebar-logout-btn" title="Cerrar sesión">
+                        <i class="fa-solid fa-right-from-bracket"></i>
+                        <span>Cerrar sesión</span>
+                    </button>
+                </form>
+
+            </nav>
+
+        </aside>
+
+        <!-- Fondo oscuro detrás de la sidebar cuando se abre como panel
+             en mobile. Un click acá la vuelve a cerrar. -->
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+
+        <!-- =========================
+             CONTENIDO PRINCIPAL
+        ========================== -->
+
+        <main class="gestion-main">
+
+            <!-- TOPBAR -->
+
+            <header class="gestion-topbar">
+
+                <div class="topbar-left">
+
+                    <button
+                        type="button"
+                        class="sidebar-toggle"
+                        id="sidebarToggle"
+                        aria-label="Mostrar u ocultar el menú"
+                        aria-expanded="true"
+                    >
+                        <i class="fa-solid fa-bars"></i>
+                    </button>
+
+                    <nav class="topbar-breadcrumb" aria-label="Ruta de navegación">
+                        <a href="{% url 'dashboard:index' %}" class="breadcrumb-root">MalvinasGym</a>
+                        <span class="breadcrumb-sep">/</span>
+                        <span class="breadcrumb-active">{% block breadcrumb %}Dashboard{% endblock %}</span>
+                    </nav>
+
+                </div>
+
+
+                <div class="topbar-right">
+
+                    <!-- BUSCADOR -->
+                    <div class="topbar-search" id="topbarSearch">
+
+                        <button
+                            type="button"
+                            class="topbar-icon-btn"
+                            id="topbarSearchToggle"
+                            aria-label="Buscar"
+                            aria-expanded="false"
+                        >
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                        </button>
+
+                        <form
+                            class="topbar-search-form"
+                            id="topbarSearchForm"
+                            action="{% url 'socios:lista' %}"
+                            method="get"
+                        >
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                            <input
+                                type="search"
+                                name="buscar"
+                                placeholder="Buscar socios…"
+                                autocomplete="off"
+                            >
+                        </form>
+
+                    </div>
+
+
+                    <!-- NOTIFICACIONES -->
+                    <div class="topbar-notifications" id="topbarNotifications">
+
+                        <button
+                            type="button"
+                            class="topbar-icon-btn"
+                            id="topbarNotifToggle"
+                            aria-label="Notificaciones"
+                            aria-expanded="false"
+                        >
+                            <i class="fa-regular fa-bell"></i>
+                            <span class="topbar-badge" aria-hidden="true"></span>
+                        </button>
+
+                        <div class="topbar-notif-panel" id="topbarNotifPanel">
+                            <div class="topbar-notif-header">Notificaciones</div>
+                            <p class="topbar-notif-empty">No tenés notificaciones nuevas.</p>
+                        </div>
+
+                    </div>
+
+
+                    <!-- MODO OSCURO / CLARO -->
+                    <button
+                        type="button"
+                        class="topbar-icon-btn topbar-theme-toggle"
+                        id="themeToggle"
+                        aria-label="Cambiar entre modo claro y oscuro"
+                        title="Cambiar tema"
+                    >
+                        <i class="fa-solid fa-moon theme-icon-dark"></i>
+                        <i class="fa-solid fa-sun theme-icon-light"></i>
+                    </button>
+
+
+                    <!-- USUARIO -->
+                    <div class="topbar-user">
+
+                        <span class="topbar-avatar">
+                            {% if request.user.first_name or request.user.last_name %}{{ request.user.first_name|slice:":1"|upper }}{{ request.user.last_name|slice:":1"|upper }}{% else %}{{ request.user.username|slice:":2"|upper }}{% endif %}
+                        </span>
+
+                        <span class="topbar-username">
+                            {{ request.user.get_short_name|default:request.user.username }}
+                        </span>
+
+                    </div>
+
+                </div>
+
+            </header>
+
+
+            <!-- CONTENIDO DE CADA PÁGINA -->
+
+            <section class="gestion-content">
+
+                {% if messages %}
+                    <ul class="messages">
+                        {% for message in messages %}
+                            <li class="message message-{{ message.tags }}">
+                                {{ message }}
+                            </li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+
+                {% block content %}
+                {% endblock %}
+
+            </section>
+
+        </main>
+
+    </div>
+
+    <!-- Colapsar/expandir la sidebar (desktop) o abrirla como panel (mobile) -->
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const mobileQuery = window.matchMedia("(max-width: 700px)");
+
+            const boton = document.getElementById("sidebarToggle");
+            const overlay = document.getElementById("sidebarOverlay");
+
+            function cerrarSidebarMobile() {
+                document.body.classList.remove("mobile-sidebar-open");
+                if (boton) boton.setAttribute("aria-expanded", "false");
+            }
+
+            if (boton) {
+                boton.addEventListener("click", function () {
+                    if (mobileQuery.matches) {
+                        const abierta = document.body.classList.toggle("mobile-sidebar-open");
+                        boton.setAttribute("aria-expanded", abierta ? "true" : "false");
+                    } else {
+                        const colapsada = document.body.classList.toggle("sidebar-collapsed");
+                        localStorage.setItem("malvinasGymSidebarCollapsed", colapsada ? "true" : "false");
+                        boton.setAttribute("aria-expanded", colapsada ? "false" : "true");
+                    }
+                });
+            }
+
+            if (overlay) {
+                overlay.addEventListener("click", cerrarSidebarMobile);
+            }
+
+            // Al navegar desde el panel en mobile, se cierra solo.
+            document.querySelectorAll(".sidebar-nav a").forEach(function (enlace) {
+                enlace.addEventListener("click", function () {
+                    if (mobileQuery.matches) cerrarSidebarMobile();
+                });
+            });
+
+            document.addEventListener("keydown", function (evento) {
+                if (evento.key === "Escape") cerrarSidebarMobile();
+            });
+        });
+    </script>
+
+    <!-- Modo oscuro / claro -->
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const boton = document.getElementById("themeToggle");
+            if (!boton) return;
+
+            boton.addEventListener("click", function () {
+                const esOscuro = document.body.getAttribute("data-theme") === "dark";
+
+                if (esOscuro) {
+                    document.body.removeAttribute("data-theme");
+                    localStorage.setItem("malvinasGymTheme", "light");
+                } else {
+                    document.body.setAttribute("data-theme", "dark");
+                    localStorage.setItem("malvinasGymTheme", "dark");
+                }
+            });
+        });
+    </script>
+
+    <!-- Desplegables de la topbar: buscador y notificaciones -->
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            function configurarDesplegable(contenedorId, botonId) {
+                const contenedor = document.getElementById(contenedorId);
+                const boton = document.getElementById(botonId);
+                if (!contenedor || !boton) return;
+
+                boton.addEventListener("click", function (evento) {
+                    evento.stopPropagation();
+                    const abierto = contenedor.classList.toggle("is-open");
+                    boton.setAttribute("aria-expanded", abierto ? "true" : "false");
+
+                    // Cierra cualquier otro desplegable abierto de la topbar.
+                    document.querySelectorAll(".topbar-right .is-open").forEach(function (otro) {
+                        if (otro !== contenedor) otro.classList.remove("is-open");
+                    });
+
+                    if (abierto) {
+                        const campo = contenedor.querySelector("input[type='search']");
+                        if (campo) campo.focus();
+                    }
+                });
+            }
+
+            configurarDesplegable("topbarSearch", "topbarSearchToggle");
+            configurarDesplegable("topbarNotifications", "topbarNotifToggle");
+
+            document.addEventListener("click", function () {
+                document.querySelectorAll(".topbar-right .is-open").forEach(function (abierto) {
+                    abierto.classList.remove("is-open");
+                });
+            });
+
+            document.addEventListener("keydown", function (evento) {
+                if (evento.key === "Escape") {
+                    document.querySelectorAll(".topbar-right .is-open").forEach(function (abierto) {
+                        abierto.classList.remove("is-open");
+                    });
+                }
+            });
+        });
+    </script>
+
+</body>
+
+</html>

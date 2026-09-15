@@ -1,0 +1,153 @@
+{% extends "base_gestion.html" %}
+{% load static %}
+
+{% block title %}Inscripciones | Malvinas GYM{% endblock %}
+{% block breadcrumb %}Inscripciones{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+    <div class="page-title">
+        <h1>Inscripciones</h1>
+    </div>
+
+    {% if perms.actividades.add_inscripcion %}
+        <a href="{% url 'actividades:inscripcion_crear' %}" class="btn btn-primary">
+            <i class="fa-solid fa-plus"></i>
+            Nueva inscripción
+        </a>
+    {% endif %}
+</div>
+
+<div class="gestion-card">
+
+    <div class="list-toolbar">
+        <form
+            method="GET"
+            action="{% url 'actividades:inscripcion_lista' %}"
+            class="search-form inscripciones-filter-form"
+            id="inscripcionesFilterForm"
+        >
+            <div class="inscripciones-socio-wrapper">
+                <div class="search-input-wrapper">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <input
+                        type="text"
+                        id="buscarSocioInscripcion"
+                        value="{% if buscar %}{{ buscar }}{% endif %}"
+                        placeholder="Nombre o DNI del socio..."
+                        autocomplete="off"
+                    >
+                    <input
+                        type="hidden"
+                        name="buscar"
+                        id="buscarSocioInscripcionValor"
+                        value="{{ buscar }}"
+                    >
+                </div>
+                <div
+                    id="sugerenciasSocioInscripcion"
+                    class="inscripciones-autocomplete-results"
+                ></div>
+            </div>
+
+            <div class="inscripciones-actividad-wrapper">
+                <div class="search-input-wrapper">
+                    <i class="fa-solid fa-dumbbell"></i>
+                    <input
+                        type="text"
+                        id="actividadInscripcion"
+                        value="{{ actividad_seleccionada }}"
+                        placeholder="Actividad..."
+                        autocomplete="off"
+                    >
+                    <input
+                        type="hidden"
+                        name="actividad"
+                        id="actividadInscripcionValor"
+                        value="{{ actividad_seleccionada }}"
+                    >
+                </div>
+                <div
+                    id="sugerenciasActividadInscripcion"
+                    class="inscripciones-autocomplete-results"
+                ></div>
+            </div>
+
+            {% if buscar or actividad_seleccionada %}
+                <a
+                    href="{% url 'actividades:inscripcion_lista' %}"
+                    class="btn btn-sm"
+                >
+                    <i class="fa-solid fa-xmark"></i>
+                    Limpiar
+                </a>
+            {% endif %}
+        </form>
+    </div>
+
+    <div class="table-wrapper">
+        <table class="gestion-table">
+            <thead>
+                <tr>
+                    <th>Socio</th>
+                    <th>Actividad</th>
+                    <th>Horario</th>
+                    <th>Fecha de inscripción</th>
+                    <th>Observación</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for inscripcion in inscripciones %}
+                    <tr>
+                        <td>{{ inscripcion.socio }}</td>
+                        <td>{{ inscripcion.horario.actividad }}</td>
+                        <td>{{ inscripcion.horario.dia }} {{ inscripcion.horario.hora_inicio|time:"H:i" }}</td>
+                        <td>{{ inscripcion.fecha_inscripcion|date:"d/m/Y" }}</td>
+                        <td>{{ inscripcion.observacion|default:"-" }}</td>
+                        <td>
+                            <div class="table-actions">
+                                {% if perms.actividades.change_inscripcion %}
+                                    <a href="{% url 'actividades:inscripcion_editar' inscripcion.pk %}" class="action-btn" title="Editar">
+                                        <i class="fa-solid fa-pen"></i>
+                                    </a>
+                                {% endif %}
+                                {% if perms.actividades.delete_inscripcion %}
+                                    <a href="{% url 'actividades:inscripcion_eliminar' inscripcion.pk %}" class="action-btn" title="Eliminar">
+                                        <i class="fa-solid fa-trash"></i>
+                                    </a>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="6">Todavía no hay inscripciones registradas.</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        {% if inscripciones.paginator.num_pages > 1 %}
+            <div class="pagination">
+                {% if inscripciones.has_previous %}
+                    <a href="?page={{ inscripciones.previous_page_number }}"><i class="fa-solid fa-chevron-left"></i></a>
+                {% endif %}
+                <span>Página {{ inscripciones.number }} de {{ inscripciones.paginator.num_pages }}</span>
+                {% if inscripciones.has_next %}
+                    <a href="?page={{ inscripciones.next_page_number }}"><i class="fa-solid fa-chevron-right"></i></a>
+                {% endif %}
+            </div>
+        {% endif %}
+    </div>
+
+</div>
+
+{{ socios_autocomplete|json_script:"socios-inscripciones-data" }}
+{{ actividades_autocomplete|json_script:"actividades-inscripciones-data" }}
+<script src="{% static 'core/js/inscripciones_socio.js' %}"></script>
+<script src="{% static 'core/js/inscripciones_actividad.js' %}"></script>
+
+{% endblock %}
